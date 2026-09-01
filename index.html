@@ -703,8 +703,8 @@ ref(db, "game");
 
 
 let resolving = false;
-
 let roundTransitionRunning = false;
+let entrancePlayed = false;
 
 
 /* ---------------------------
@@ -1108,8 +1108,11 @@ if (
   ).textContent =
     "BOTH PLAYERS CONNECTED ✓";
 
+  if (!entrancePlayed) {
 
-setTimeout(async () => {
+    entrancePlayed = true;
+
+    setTimeout(async () => {
 
   document.getElementById(
     "joinScreen"
@@ -1149,9 +1152,13 @@ setTimeout(async () => {
   ).style.display = "block";
 
 }, 1200);
-
+    
+}
+  
 } else {
 
+  entrancePlayed = false;
+  
   document.getElementById(
     "joinScreen"
   ).style.display =
@@ -1347,6 +1354,7 @@ document.getElementById(
     roundTransitionRunning =
       false;
 
+    entrancePlayed = false;
 
     await update(
   gameRef,
@@ -1383,8 +1391,11 @@ document.getElementById(
   async () => {
 
     resolving = false;
+    
     roundTransitionRunning = false;
-
+    
+    entrancePlayed = false;
+    
     await update(
       gameRef,
       {
