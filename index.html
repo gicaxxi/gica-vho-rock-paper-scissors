@@ -305,6 +305,87 @@ button:hover {
   }
 
 }
+
+/* ENTRANCE SCREEN */
+
+#entranceScreen {
+  width: 100%;
+  min-height: 560px;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.entrance-small {
+  margin-top: 14px;
+  color: #b58a39;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 4px;
+}
+
+.entrance-stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 55px;
+  margin-top: 60px;
+}
+
+.entrance-side {
+  width: 310px;
+  min-height: 220px;
+  padding: 35px 25px;
+  border: 2px solid #c39a4b;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.champion-side {
+  background: #7a2038;
+  color: white;
+}
+
+.boss-side {
+  background: #14213a;
+  color: white;
+}
+
+.entrance-icon {
+  font-size: 58px;
+  margin-bottom: 14px;
+}
+
+.entrance-role {
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.entrance-name {
+  margin-top: 8px;
+  color: #e5bd68;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.entrance-vs {
+  color: #b58a39;
+  font-size: 38px;
+  font-weight: bold;
+}
+
+.entrance-message {
+  margin-top: 45px;
+  color: #7a2038;
+  font-size: 27px;
+  font-weight: bold;
+  letter-spacing: 3px;
+}
 /* HOST CONTROLS */
 
 .host-controls {
@@ -415,6 +496,40 @@ button:hover {
 
 </div>  
 
+<div id="entranceScreen" style="display:none;">
+
+  <div class="brand">
+    GICA & VHO
+  </div>
+
+  <div class="entrance-small">
+    FINAL BOSS BATTLE
+  </div>
+
+  <div class="entrance-stage">
+
+    <div class="entrance-side champion-side">
+      <div class="entrance-icon">🏆</div>
+      <div class="entrance-role">CHAMPION</div>
+    </div>
+
+    <div class="entrance-vs">
+      VS
+    </div>
+
+    <div class="entrance-side boss-side">
+      <div class="entrance-icon">👑</div>
+      <div class="entrance-role">FINAL BOSS</div>
+      <div class="entrance-name">GICA & VHO</div>
+    </div>
+
+  </div>
+
+  <div id="entranceMessage" class="entrance-message">
+    PREPARE FOR BATTLE
+  </div>
+
+</div>
 <div id="battleScreen" style="display:none;">
   
   <div class="brand">
@@ -994,19 +1109,46 @@ if (
     "BOTH PLAYERS CONNECTED ✓";
 
 
-  setTimeout(() => {
+setTimeout(async () => {
 
-    document.getElementById(
-      "joinScreen"
-    ).style.display =
-      "none";
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
 
-    document.getElementById(
-      "battleScreen"
-    ).style.display =
-      "block";
+  document.getElementById(
+    "battleScreen"
+  ).style.display = "none";
 
-  }, 1500);
+  const entranceScreen =
+    document.getElementById("entranceScreen");
+
+  const entranceMessage =
+    document.getElementById("entranceMessage");
+
+  entranceScreen.style.display = "flex";
+
+  entranceMessage.textContent =
+    "CHAMPION ENTERS THE ARENA";
+
+  await sleep(1300);
+
+  entranceMessage.textContent =
+    "THE FINAL BOSS HAS ARRIVED";
+
+  await sleep(1300);
+
+  entranceMessage.textContent =
+    "BATTLE START!";
+
+  await sleep(1000);
+
+  entranceScreen.style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
+  ).style.display = "block";
+
+}, 1200);
 
 } else {
 
@@ -1015,6 +1157,10 @@ if (
   ).style.display =
     "block";
 
+document.getElementById(
+  "entranceScreen"
+).style.display = "none";
+  
   document.getElementById(
     "battleScreen"
   ).style.display =
