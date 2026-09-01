@@ -337,6 +337,13 @@ button:hover {
 
 </div>
 
+  <div style="margin-top: 20px;">
+
+  <button id="resetGameButton">
+    RESET GAME
+  </button>
+
+</div>
 
 <script type="module">
 
@@ -954,6 +961,47 @@ document.getElementById(
   }
 );
 
+document.getElementById(
+  "resetGameButton"
+)
+.addEventListener(
+  "click",
+  async () => {
+
+    resolving = false;
+    roundTransitionRunning = false;
+
+    await update(
+      gameRef,
+      {
+        round: 1,
+        "player1/choice": null,
+        "player2/choice": null,
+        "score/player1": 0,
+        "score/player2": 0,
+        roundComplete: false
+      }
+    );
+
+    document.getElementById(
+      "winnerScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+      "message"
+    ).textContent =
+      "WAITING FOR PLAYERS";
+
+    document.getElementById(
+      "player1Choice"
+    ).textContent = "?";
+
+    document.getElementById(
+      "player2Choice"
+    ).textContent = "?";
+
+  }
+); 
 </script>
 
 </body>
