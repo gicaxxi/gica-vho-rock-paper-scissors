@@ -184,10 +184,10 @@ import {
   getDatabase,
   ref,
   set,
-  onValue
+  onValue,
+  onDisconnect
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyAu56OSm_csaTXPyGrKfy_wTYY9DsPhMW8",
   authDomain: "gica-vho-wedding-game.firebaseapp.com",
@@ -201,6 +201,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+const playerConnectionRef =
+  ref(db, "game/player2/connected");
+
+set(playerConnectionRef, true);
+
+onDisconnect(playerConnectionRef)
+  .set(false);
 let currentRound = null;
   
 let selectedChoice = null;
