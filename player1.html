@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Player 1 | Gica & Vho</title>
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #f7f1e5;
+  color: #14213a;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+.controller {
+  max-width: 500px;
+  margin: auto;
+  text-align: center;
+}
+
+.brand {
+  color: #7a2038;
+  font-weight: bold;
+  letter-spacing: 4px;
+  margin-top: 20px;
+}
+
+h1 {
+  margin: 12px 0 5px;
+  font-size: 34px;
+}
+
+.player {
+  color: #b58a39;
+  font-weight: bold;
+  letter-spacing: 3px;
+  margin-bottom: 35px;
+}
+
+.instruction {
+  font-size: 19px;
+  font-weight: bold;
+  margin-bottom: 25px;
+}
+
+.choice {
+  width: 100%;
+  height: 125px;
+  margin-bottom: 15px;
+
+  border: 2px solid #c39a4b;
+  background: #fffdf8;
+
+  color: #14213a;
+
+  font-size: 22px;
+  font-weight: bold;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 25px;
+}
+
+.choice:active {
+  transform: scale(.98);
+}
+
+.choice.selected {
+  background: #7a2038;
+  color: white;
+}
+
+.emoji {
+  font-size: 55px;
+}
+
+#status {
+  margin-top: 30px;
+  padding: 18px;
+
+  border: 1px solid #c39a4b;
+
+  font-weight: bold;
+
+  min-height: 55px;
+}
+
+.waiting {
+  color: #7a2038;
+}
+
+.ready {
+  background: #14213a;
+  color: white;
+}
+
+.footer {
+  margin-top: 35px;
+  color: #9b7a39;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="controller">
+
+  <div class="brand">
+    GICA & VHO
+  </div>
+
+  <h1>
+    MAKE YOUR MOVE
+  </h1>
+
+  <div class="player">
+    PLAYER 1
+  </div>
+
+  <div class="instruction">
+    Choose Rock, Paper or Scissors.
+  </div>
+
+
+  <button class="choice"
+          onclick="choose('rock', this)">
+
+    <span class="emoji">✊</span>
+
+    ROCK
+
+  </button>
+
+
+  <button class="choice"
+          onclick="choose('paper', this)">
+
+    <span class="emoji">✋</span>
+
+    PAPER
+
+  </button>
+
+
+  <button class="choice"
+          onclick="choose('scissors', this)">
+
+    <span class="emoji">✌️</span>
+
+    SCISSORS
+
+  </button>
+
+
+  <div id="status" class="waiting">
+    WAITING FOR YOUR MOVE
+  </div>
+
+
+  <div class="footer">
+    THE WEDDING GAME • GICA & VHO
+  </div>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+
+import {
+  getDatabase,
+  ref,
+  set
+}
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+  "AIzaSyAu56OSm_csaTXPyGrKfy_wTYY9DsPhMW8",
+
+  authDomain:
+  "gica-vho-wedding-game.firebaseapp.com",
+
+  databaseURL:
+  "https://gica-vho-wedding-game-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+  projectId:
+  "gica-vho-wedding-game",
+
+  storageBucket:
+  "gica-vho-wedding-game.firebasestorage.app",
+
+  messagingSenderId:
+  "544288400742",
+
+  appId:
+  "1:544288400742:web:c26d421bb4486a4e1814a7"
+
+};
+
+
+const app =
+initializeApp(firebaseConfig);
+
+
+const db =
+getDatabase(app);
+
+
+window.choose =
+async function(choice, button) {
+
+  document
+  .querySelectorAll(".choice")
+  .forEach(btn =>
+    btn.classList.remove("selected")
+  );
+
+
+  button.classList.add("selected");
+
+
+  const status =
+  document.getElementById("status");
+
+
+  status.textContent =
+  "MOVE LOCKED ✓";
+
+
+  status.className =
+  "ready";
+
+
+  await set(
+    ref(db, "game/player1/choice"),
+    choice
+  );
+
+};
+
+</script>
+
+</body>
+</html>
