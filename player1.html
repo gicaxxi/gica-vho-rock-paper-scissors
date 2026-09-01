@@ -284,13 +284,22 @@ onValue(ref(db, "game/round"), snapshot => {
   if (newRound === null) return;
 
   if (currentRound === null) {
+
     currentRound = newRound;
+
+    if (locked) {
+      resetController();
+    }
+
     return;
   }
 
   if (newRound !== currentRound) {
+
     currentRound = newRound;
+
     resetController();
+
   }
 
 });
