@@ -183,7 +183,8 @@ from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getDatabase,
   ref,
-  set
+  set,
+  onValue
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
@@ -200,6 +201,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+  let currentRound = null;
+
 let selectedChoice = null;
 let locked = false;
 
@@ -208,6 +211,25 @@ const lockButton = document.getElementById("lockButton");
 const selection = document.getElementById("selection");
 const status = document.getElementById("status");
 
+function resetController() {
+
+  selectedChoice = null;
+  locked = false;
+
+  buttons.forEach(button => {
+    button.disabled = false;
+    button.classList.remove("selected");
+  });
+
+  lockButton.disabled = true;
+  lockButton.textContent = "LOCK MY MOVE";
+
+  selection.textContent = "NO MOVE SELECTED";
+
+  status.textContent = "WAITING FOR YOUR MOVE";
+  status.className = "waiting";
+}
+  
 buttons.forEach(button => {
   button.addEventListener("click", () => {
 
@@ -255,6 +277,23 @@ lockButton.addEventListener("click", async () => {
   status.className = "ready";
 });
 
+onValue(ref(db, "game/round"), snapshot => {
+
+  const newRound = snapshot.val();
+
+  if (newRound === null) return;
+
+  if (currentRound === null) {
+    currentRound = newRound;
+    return;
+  }
+
+  if (newRound !== currentRound) {
+    currentRound = newRound;
+    resetController();
+  }
+
+});
 </script>
 
 </body>
