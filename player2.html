@@ -7,10 +7,7 @@
 <title>Player 2 | Gica & Vho</title>
 
 <style>
-
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -56,25 +53,16 @@ h1 {
   width: 100%;
   height: 125px;
   margin-bottom: 15px;
-
   border: 2px solid #c39a4b;
   background: #fffdf8;
-
   color: #14213a;
-
   font-size: 22px;
   font-weight: bold;
-
   cursor: pointer;
-
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 25px;
-}
-
-.choice:active {
-  transform: scale(.98);
 }
 
 .choice.selected {
@@ -82,18 +70,43 @@ h1 {
   color: white;
 }
 
+.choice:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+}
+
 .emoji {
   font-size: 55px;
 }
 
-#status {
-  margin-top: 30px;
-  padding: 18px;
-
-  border: 1px solid #c39a4b;
-
+#selection {
+  margin-top: 25px;
   font-weight: bold;
+  color: #7a2038;
+}
 
+#lockButton {
+  width: 100%;
+  margin-top: 18px;
+  padding: 18px;
+  border: none;
+  background: #14213a;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#lockButton:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+#status {
+  margin-top: 25px;
+  padding: 18px;
+  border: 1px solid #c39a4b;
+  font-weight: bold;
   min-height: 55px;
 }
 
@@ -112,66 +125,49 @@ h1 {
   font-size: 12px;
   letter-spacing: 2px;
 }
-
 </style>
 </head>
-
 
 <body>
 
 <div class="controller">
 
-  <div class="brand">
-    GICA & VHO
-  </div>
+  <div class="brand">GICA & VHO</div>
 
-  <h1>
-    MAKE YOUR MOVE
-  </h1>
+  <h1>MAKE YOUR MOVE</h1>
 
-  <div class="player">
-    PLAYER 2
-  </div>
+  <div class="player">Player 2</div>
 
   <div class="instruction">
-    Choose Rock, Paper or Scissors.
+    Choose your move, then lock it in.
   </div>
 
-
-  <button class="choice"
-          onclick="choose('rock', this)">
-
+  <button class="choice" data-choice="rock">
     <span class="emoji">✊</span>
-
     ROCK
-
   </button>
 
-
-  <button class="choice"
-          onclick="choose('paper', this)">
-
+  <button class="choice" data-choice="paper">
     <span class="emoji">✋</span>
-
     PAPER
-
   </button>
 
-
-  <button class="choice"
-          onclick="choose('scissors', this)">
-
+  <button class="choice" data-choice="scissors">
     <span class="emoji">✌️</span>
-
     SCISSORS
-
   </button>
 
+  <div id="selection">
+    NO MOVE SELECTED
+  </div>
+
+  <button id="lockButton" disabled>
+    LOCK MY MOVE
+  </button>
 
   <div id="status" class="waiting">
     WAITING FOR YOUR MOVE
   </div>
-
 
   <div class="footer">
     THE WEDDING GAME • GICA & VHO
@@ -179,12 +175,10 @@ h1 {
 
 </div>
 
-
 <script type="module">
 
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-
 
 import {
   getDatabase,
@@ -193,72 +187,73 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
-
 const firebaseConfig = {
-
-  apiKey:
-  "AIzaSyAu56OSm_csaTXPyGrKfy_wTYY9DsPhMW8",
-
-  authDomain:
-  "gica-vho-wedding-game.firebaseapp.com",
-
-  databaseURL:
-  "https://gica-vho-wedding-game-default-rtdb.asia-southeast1.firebasedatabase.app",
-
-  projectId:
-  "gica-vho-wedding-game",
-
-  storageBucket:
-  "gica-vho-wedding-game.firebasestorage.app",
-
-  messagingSenderId:
-  "544288400742",
-
-  appId:
-  "1:544288400742:web:c26d421bb4486a4e1814a7"
-
+  apiKey: "AIzaSyAu56OSm_csaTXPyGrKfy_wTYY9DsPhMW8",
+  authDomain: "gica-vho-wedding-game.firebaseapp.com",
+  databaseURL: "https://gica-vho-wedding-game-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "gica-vho-wedding-game",
+  storageBucket: "gica-vho-wedding-game.firebasestorage.app",
+  messagingSenderId: "544288400742",
+  appId: "1:544288400742:web:c26d421bb4486a4e1814a7"
 };
 
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-const app =
-initializeApp(firebaseConfig);
+let selectedChoice = null;
+let locked = false;
 
+const buttons = document.querySelectorAll(".choice");
+const lockButton = document.getElementById("lockButton");
+const selection = document.getElementById("selection");
+const status = document.getElementById("status");
 
-const db =
-getDatabase(app);
+buttons.forEach(button => {
+  button.addEventListener("click", () => {
 
+    if (locked) return;
 
-window.choose =
-async function(choice, button) {
+    selectedChoice = button.dataset.choice;
 
-  document
-  .querySelectorAll(".choice")
-  .forEach(btn =>
-    btn.classList.remove("selected")
-  );
+    buttons.forEach(btn =>
+      btn.classList.remove("selected")
+    );
 
+    button.classList.add("selected");
 
-  button.classList.add("selected");
+    selection.textContent =
+      "SELECTED: " + selectedChoice.toUpperCase();
 
+    lockButton.disabled = false;
+  });
+});
 
-  const status =
-  document.getElementById("status");
+lockButton.addEventListener("click", async () => {
 
+  if (!selectedChoice || locked) return;
 
-  status.textContent =
-  "MOVE LOCKED ✓";
-
-
-  status.className =
-  "ready";
-
+  locked = true;
 
   await set(
-    ref(db, "game/player2/choice"),
-    choice
+    ref(db, "game/player1/choice"),
+    selectedChoice
   );
 
-};
+  buttons.forEach(button => {
+    button.disabled = true;
+  });
+
+  lockButton.disabled = true;
+  lockButton.textContent = "MOVE LOCKED ✓";
+
+  selection.textContent =
+    "FINAL MOVE: " + selectedChoice.toUpperCase();
+
+  status.textContent =
+    "WAITING FOR PLAYER 2...";
+
+  status.className = "ready";
+});
 
 </script>
 
