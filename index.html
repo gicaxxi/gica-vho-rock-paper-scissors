@@ -245,6 +245,86 @@ button:hover {
 
 <div class="game">
 
+<div id="joinScreen">
+
+  <div class="brand">
+    GICA & VHO
+  </div>
+
+  <h1>
+    JOIN THE BATTLE
+  </h1>
+
+  <div class="subtitle">
+    FINAL BOSS CHALLENGE
+  </div>
+
+  <div class="join-players">
+
+    <div class="join-card">
+
+      <div class="join-role">
+        🏆 CHAMPION
+      </div>
+
+      <div class="join-name">
+        PLAYER
+      </div>
+
+      <div class="join-qr">
+        <img
+          src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https%3A%2F%2Fgicaxxi.github.io%2Fgica-vho-rock-paper-scissors%2Fplayer1.html"
+          alt="Champion QR Code">
+      </div>
+
+      <div
+        class="join-status"
+        id="joinPlayer1Status">
+        WAITING TO JOIN
+      </div>
+
+    </div>
+
+    <div class="join-vs">
+      VS
+    </div>
+
+    <div class="join-card">
+
+      <div class="join-role">
+        👑 FINAL BOSS
+      </div>
+
+      <div class="join-name">
+        GICA & VHO
+      </div>
+
+      <div class="join-qr">
+        <img
+          src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https%3A%2F%2Fgicaxxi.github.io%2Fgica-vho-rock-paper-scissors%2Fplayer2.html"
+          alt="Final Boss QR Code">
+      </div>
+
+      <div
+        class="join-status"
+        id="joinPlayer2Status">
+        WAITING TO JOIN
+      </div>
+
+    </div>
+
+  </div>
+
+  <div
+    class="join-message"
+    id="joinMessage">
+    SCAN YOUR QR CODE TO ENTER THE ARENA
+  </div>
+
+</div>  
+
+<div id="battleScreen" style="display:none;">
+  
   <div class="brand">
     GICA & VHO
   </div>
@@ -355,6 +435,8 @@ button:hover {
   <button id="resetGameButton">
     RESET GAME
   </button>
+</div>
+
 </div>
 
 </div>
@@ -767,6 +849,86 @@ onValue(
   const data =
     snapshot.val() || {};
 
+  const player1Connected =
+  data.player1?.connected === true;
+
+const player2Connected =
+  data.player2?.connected === true;
+
+
+/* JOIN SCREEN STATUS */
+
+if (player1Connected) {
+
+  document.getElementById(
+    "joinPlayer1Status"
+  ).textContent =
+    "CONNECTED ✓";
+
+} else {
+
+  document.getElementById(
+    "joinPlayer1Status"
+  ).textContent =
+    "WAITING TO JOIN";
+
+}
+
+
+if (player2Connected) {
+
+  document.getElementById(
+    "joinPlayer2Status"
+  ).textContent =
+    "CONNECTED ✓";
+
+} else {
+
+  document.getElementById(
+    "joinPlayer2Status"
+  ).textContent =
+    "WAITING TO JOIN";
+
+}
+
+if (
+  player1Connected &&
+  player2Connected
+) {
+
+  document.getElementById(
+    "joinMessage"
+  ).textContent =
+    "BOTH PLAYERS CONNECTED ✓";
+
+
+  setTimeout(() => {
+
+    document.getElementById(
+      "joinScreen"
+    ).style.display =
+      "none";
+
+    document.getElementById(
+      "battleScreen"
+    ).style.display =
+      "block";
+
+  }, 1500);
+
+} else {
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display =
+    "block";
+
+  document.getElementById(
+    "battleScreen"
+  ).style.display =
+    "none";
+
+}
 
   document.getElementById(
     "score1"
