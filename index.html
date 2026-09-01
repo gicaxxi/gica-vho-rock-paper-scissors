@@ -786,76 +786,123 @@ onValue(
       "?";
 
 
-    if (
-      data.player1?.choice
-    ) {
+if (data.player1?.choice) {
 
-      document.getElementById(
-        "player1Status"
-      ).textContent =
-        "READY ✓";
+  document.getElementById(
+    "player1Status"
+  ).textContent =
+    "READY ✓";
 
-    }
+}
 
-    else {
+else if (data.player1?.connected) {
 
-      document.getElementById(
-        "player1Status"
-      ).textContent =
-        "WAITING...";
+  document.getElementById(
+    "player1Status"
+  ).textContent =
+    "CONNECTED ✓";
 
-    }
+}
 
+else {
 
-    if (
-      data.player2?.choice
-    ) {
+  document.getElementById(
+    "player1Status"
+  ).textContent =
+    "WAITING TO JOIN";
 
-      document.getElementById(
-        "player2Status"
-      ).textContent =
-        "READY ✓";
-
-    }
-
-    else {
-
-      document.getElementById(
-        "player2Status"
-      ).textContent =
-        "WAITING...";
-
-    }
+}
 
 
-    if (
+    if (data.player2?.choice) {
 
-      data.player1?.choice
+  document.getElementById(
+    "player2Status"
+  ).textContent =
+    "READY ✓";
 
-      &&
+}
 
-      data.player2?.choice
+else if (data.player2?.connected) {
 
-    ) {
+  document.getElementById(
+    "player2Status"
+  ).textContent =
+    "CONNECTED ✓";
 
-      resolveRound(data);
+}
 
-    }
+else {
 
-    else {
+  document.getElementById(
+    "player2Status"
+  ).textContent =
+    "WAITING TO JOIN";
 
-      document.getElementById(
-        "message"
-      ).textContent =
-        "WAITING FOR PLAYERS";
+}
+
+if (
+  data.player1?.choice
+  &&
+  data.player2?.choice
+) {
+
+  resolveRound(data);
+
+}
+
+else if (
+  data.player1?.connected
+  &&
+  data.player2?.connected
+) {
+
+  document.getElementById(
+    "message"
+  ).textContent =
+    "BOTH PLAYERS CONNECTED ✓";
 
 
-      document.getElementById(
-        "gameStatus"
-      ).textContent =
-        "Waiting for both sides to lock their moves.";
+  document.getElementById(
+    "gameStatus"
+  ).textContent =
+    "Choose your moves and lock them in.";
 
-    }
+}
+
+else if (
+  data.player1?.connected
+  ||
+  data.player2?.connected
+) {
+
+  document.getElementById(
+    "message"
+  ).textContent =
+    "WAITING FOR THE OTHER SIDE";
+
+
+  document.getElementById(
+    "gameStatus"
+  ).textContent =
+    "One player has joined the battle.";
+
+}
+
+else {
+
+  document.getElementById(
+    "message"
+  ).textContent =
+    "WAITING FOR PLAYERS";
+
+
+  document.getElementById(
+    "gameStatus"
+  ).textContent =
+    "Scan the QR code to join the battle.";
+
+}
 
   }
 
@@ -880,30 +927,29 @@ document.getElementById(
       false;
 
 
-    await set(
-      gameRef,
-      {
+    await update(
+  gameRef,
+  {
 
-        round: 1,
+    round: 1,
 
-        player1: {
-          choice: null
-        },
+    "player1/choice":
+      null,
 
-        player2: {
-          choice: null
-        },
+    "player2/choice":
+      null,
 
-        score: {
-          player1: 0,
-          player2: 0
-        },
+    "score/player1":
+      0,
 
-        roundComplete:
-          false
+    "score/player2":
+      0,
 
-      }
-    );
+    roundComplete:
+      false
+
+  }
+);
 
   }
 );
