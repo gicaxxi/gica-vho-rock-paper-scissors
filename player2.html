@@ -64,7 +64,7 @@ h1 {
   opacity: .45;
 }
 
-#revealGameMastersButton {
+#startBattleButton {
   margin-bottom: 30px;
 }
 
@@ -179,6 +179,10 @@ h1 {
     REVEAL GAME MASTERS
   </button>
 
+  <button id="startBattleButton" class="admin-button" disabled>
+    START BATTLE
+  </button>
+
   <div class="instruction">
     Choose your move, then lock it in.
   </div>
@@ -225,6 +229,7 @@ import {
   getDatabase,
   ref,
   set,
+  update,
   onValue,
   onDisconnect
 }
@@ -260,6 +265,7 @@ const startIntroButton = document.getElementById("startIntroButton");
 const openRegistrationButton = document.getElementById("openRegistrationButton");
 const initializeBattleButton = document.getElementById("initializeBattleButton");
 const revealGameMastersButton = document.getElementById("revealGameMastersButton");
+const startBattleButton = document.getElementById("startBattleButton");
 const selection = document.getElementById("selection");
 const status = document.getElementById("status");
 
@@ -304,6 +310,18 @@ initializeBattleButton.addEventListener("click", async () => {
 let championRegistered = false;
 let adminPhase = "idle";
 let systemOverrideReady = false;
+let gameMasterRevealReady = false;
+let championConnected = false;
+
+function updateStartBattleControl() {
+
+  startBattleButton.disabled = !(
+    adminPhase === "game-master-reveal" &&
+    gameMasterRevealReady &&
+    championRegistered &&
+    championConnected
+  );
+}
 
 function updateAdminControls() {
 
@@ -319,6 +337,7 @@ onValue(ref(db, "game/champion/registered"), snapshot => {
 
   championRegistered = snapshot.val() === true;
   updateAdminControls();
+  updateStartBattleControl();
 
   if (!championRegistered) {
     initializeBattleButton.textContent = "INITIALIZE FINAL BATTLE";
@@ -329,9 +348,14 @@ onValue(ref(db, "game/phase"), snapshot => {
 
   adminPhase = snapshot.val() || "idle";
   updateAdminControls();
+  updateStartBattleControl();
 
   if (adminPhase !== "game-master-reveal") {
     revealGameMastersButton.textContent = "REVEAL GAME MASTERS";
+  }
+
+  if (adminPhase !== "battle-intro") {
+    startBattleButton.textContent = "START BATTLE";
   }
 });
 
@@ -344,12 +368,59 @@ onValue(ref(db, "game/systemOverrideReady"), snapshot => {
 revealGameMastersButton.addEventListener("click", async () => {
 
   await set(
+    ref(db, "game/gameMasterRevealReady"),
+    false
+  );
+
+  await set(
     ref(db, "game/phase"),
     "game-master-reveal"
   );
 
   revealGameMastersButton.textContent =
     "GAME MASTERS REVEALED ✓";
+});
+
+onValue(ref(db, "game/gameMasterRevealReady"), snapshot => {
+
+  gameMasterRevealReady = snapshot.val() === true;
+  updateStartBattleControl();
+});
+
+onValue(ref(db, "game/player1/connected"), snapshot => {
+
+  championConnected = snapshot.val() === true;
+  updateStartBattleControl();
+});
+
+startBattleButton.addEventListener("click", async () => {
+
+  const gameRef = ref(db, "game");
+
+  await update(
+    gameRef,
+    {
+      round: 0,
+      roundComplete: false,
+      "score/player1": 0,
+      "score/player2": 0,
+      "player1/choice": null,
+      "player2/choice": null,
+      gameMasterRevealReady: false
+    }
+  );
+
+  await update(
+    gameRef,
+    {
+      round: 1,
+      phase: "battle-intro"
+    }
+  );
+
+  resetController();
+
+  startBattleButton.textContent = "BATTLE STARTED ✓";
 });
 
 function resetController() {

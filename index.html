@@ -768,6 +768,105 @@ button:hover {
     animation-duration: .01ms;
   }
 }
+
+/* FINAL BATTLE MATCHUP INTRO */
+
+#battleIntroScreen {
+  width: 100%;
+  min-height: 560px;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.battle-intro-panel {
+  width: min(860px, 94%);
+  min-height: 450px;
+  padding: 42px 30px;
+  border: 2px solid #c39a4b;
+  background: #fffdf8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 10px 10px 0 rgba(20, 33, 58, .09);
+}
+
+.battle-intro-title {
+  margin: 0;
+  color: #7a2038;
+  font-size: clamp(31px, 5vw, 54px);
+  letter-spacing: 3px;
+}
+
+.battle-intro-matchup {
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr);
+  align-items: center;
+  gap: 28px;
+  width: min(720px, 100%);
+  margin-top: 36px;
+}
+
+.battle-intro-side {
+  color: #14213a;
+  font-size: clamp(20px, 3vw, 29px);
+  font-weight: bold;
+  letter-spacing: 2px;
+  line-height: 1.45;
+}
+
+.battle-intro-side.game-masters {
+  color: #7a2038;
+}
+
+.battle-intro-vs {
+  color: #b58a39;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.battle-intro-rule {
+  margin-top: 34px;
+  color: #755e38;
+  font-size: 17px;
+  font-weight: bold;
+  letter-spacing: 4px;
+}
+
+.battle-intro-cue {
+  min-height: 64px;
+  margin-top: 28px;
+  color: #7a2038;
+  font-size: clamp(38px, 6vw, 64px);
+  font-weight: bold;
+  letter-spacing: 5px;
+}
+
+.battle-intro-cue.start {
+  color: #14213a;
+  animation: battleStartPulse .75s steps(2, end);
+}
+
+@keyframes battleStartPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); color: #b58a39; }
+}
+
+@media(max-width:650px) {
+  .battle-intro-matchup {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .battle-intro-cue.start {
+    animation-duration: .01ms;
+  }
+}
 /* HOST CONTROLS */
 
 .host-controls {
@@ -970,6 +1069,30 @@ button:hover {
 
 </div>
 
+<div id="battleIntroScreen" style="display:none;">
+
+  <div class="battle-intro-panel">
+    <h2 class="battle-intro-title">👑 FINAL BOSS BATTLE</h2>
+
+    <div class="battle-intro-matchup">
+      <div class="battle-intro-side">
+        🏆 <span id="battleIntroChampionName">CHAMPION</span>
+      </div>
+
+      <div class="battle-intro-vs">VS</div>
+
+      <div class="battle-intro-side game-masters">
+        🎮 THE GAME MASTERS<br>
+        GICA & VHO
+      </div>
+    </div>
+
+    <div class="battle-intro-rule">FIRST TO 2 WINS</div>
+    <div id="battleIntroCue" class="battle-intro-cue"></div>
+  </div>
+
+</div>
+
 <div id="battleScreen" style="display:none;">
   
   <div class="brand">
@@ -990,7 +1113,7 @@ button:hover {
     <div class="score champion">
 
       <div class="score-label">
-        🏆 CHAMPION
+        🏆 <span id="scoreChampionName">CHAMPION</span>
       </div>
 
       <div class="score-number" id="score1">
@@ -1003,7 +1126,7 @@ button:hover {
     <div class="score boss">
 
       <div class="score-label">
-        👑 FINAL BOSS
+        🎮 THE GAME MASTERS
       </div>
 
       <div class="score-number" id="score2">
@@ -1030,7 +1153,7 @@ button:hover {
     <div class="player-card">
 
       <div class="player-name">
-        🏆 CHAMPION
+        🏆 <span id="battleChampionName">CHAMPION</span>
       </div>
 
       <div class="choice" id="player1Choice">
@@ -1053,7 +1176,7 @@ button:hover {
     <div class="player-card">
 
       <div class="player-name">
-        👑 GICA & VHO
+        🎮 THE GAME MASTERS<br>GICA & VHO
       </div>
 
       <div class="choice" id="player2Choice">
@@ -1155,6 +1278,7 @@ let roundTransitionRunning = false;
 let entrancePlayed = false;
 let initializationPlayed = false;
 let gameMasterRevealPlayed = false;
+let battleIntroPlayed = false;
 let currentPhase = "idle";
 
 
@@ -1527,6 +1651,21 @@ const championName =
 const championTable =
   data.champion?.table || "";
 
+const championDisplayName =
+  championName.trim().toUpperCase() || "CHAMPION";
+
+document.getElementById(
+  "scoreChampionName"
+).textContent = championDisplayName;
+
+document.getElementById(
+  "battleChampionName"
+).textContent = championDisplayName;
+
+document.getElementById(
+  "battleIntroChampionName"
+).textContent = championDisplayName;
+
 
 /* JOIN SCREEN STATUS */
 
@@ -1590,6 +1729,7 @@ if (phase === "registration") {
   entrancePlayed = false;
   initializationPlayed = false;
   gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
 
   document.getElementById(
     "joinScreen"
@@ -1609,6 +1749,10 @@ if (phase === "registration") {
 
   document.getElementById(
     "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleIntroScreen"
   ).style.display = "none";
 
   const registrationScreen =
@@ -1645,6 +1789,7 @@ if (phase === "registration") {
 
   initializationPlayed = false;
   gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
 
   if (!entrancePlayed) {
 
@@ -1670,6 +1815,10 @@ if (phase === "registration") {
 
   document.getElementById(
     "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleIntroScreen"
   ).style.display = "none";
 
   const entranceScreen =
@@ -1793,6 +1942,7 @@ if (phase === "registration") {
 
   entrancePlayed = false;
   gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
 
   document.getElementById(
     "joinScreen"
@@ -1812,6 +1962,10 @@ if (phase === "registration") {
 
   document.getElementById(
     "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleIntroScreen"
   ).style.display = "none";
 
   const initializingScreen =
@@ -1943,6 +2097,7 @@ if (phase === "registration") {
 
   entrancePlayed = false;
   initializationPlayed = false;
+  battleIntroPlayed = false;
 
   document.getElementById(
     "joinScreen"
@@ -1964,6 +2119,10 @@ if (phase === "registration") {
     "battleScreen"
   ).style.display = "none";
 
+  document.getElementById(
+    "battleIntroScreen"
+  ).style.display = "none";
+
   const gameMasterRevealScreen =
     document.getElementById("gameMasterRevealScreen");
 
@@ -1974,6 +2133,13 @@ if (phase === "registration") {
     gameMasterRevealPlayed = true;
 
     setTimeout(async () => {
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      await set(
+        ref(db, "game/gameMasterRevealReady"),
+        false
+      );
 
       if (currentPhase !== "game-master-reveal") return;
 
@@ -2085,10 +2251,15 @@ if (phase === "registration") {
       gameMasterSupport.textContent = "GICA & VHO";
       gameMasterConfirmation.textContent = "ADMINISTRATORS IDENTIFIED";
 
+      await set(
+        ref(db, "game/gameMasterRevealReady"),
+        true
+      );
+
     }, 500);
   }
 
-} else if (phase === "battle") {
+} else if (phase === "battle-intro") {
 
   entrancePlayed = false;
   initializationPlayed = false;
@@ -2116,6 +2287,85 @@ if (phase === "registration") {
 
   document.getElementById(
     "battleScreen"
+  ).style.display = "none";
+
+  const battleIntroScreen =
+    document.getElementById("battleIntroScreen");
+
+  battleIntroScreen.style.display = "flex";
+
+  if (!battleIntroPlayed) {
+
+    battleIntroPlayed = true;
+
+    setTimeout(async () => {
+
+      if (currentPhase !== "battle-intro") return;
+
+      const battleIntroCue =
+        document.getElementById("battleIntroCue");
+
+      battleIntroCue.className = "battle-intro-cue";
+      battleIntroCue.textContent = "";
+
+      await sleep(2300);
+
+      if (currentPhase !== "battle-intro") return;
+
+      battleIntroCue.textContent = "READY?";
+
+      await sleep(1300);
+
+      if (currentPhase !== "battle-intro") return;
+
+      battleIntroCue.className = "battle-intro-cue start";
+      battleIntroCue.textContent = "BATTLE START!";
+
+      await sleep(1000);
+
+      if (currentPhase !== "battle-intro") return;
+
+      await set(
+        ref(db, "game/phase"),
+        "battle"
+      );
+
+    }, 400);
+  }
+
+} else if (phase === "battle") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "entranceScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleIntroScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
   ).style.display = "block";
 
 } else {
@@ -2123,6 +2373,7 @@ if (phase === "registration") {
   entrancePlayed = false;
   initializationPlayed = false;
   gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
   
   document.getElementById(
     "joinScreen"
@@ -2148,6 +2399,10 @@ document.getElementById(
 
   document.getElementById(
     "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleIntroScreen"
   ).style.display = "none";
 
 }
@@ -2365,6 +2620,9 @@ document.getElementById(
     systemOverrideReady:
       false,
 
+    gameMasterRevealReady:
+      false,
+
     roundComplete:
       false
 
@@ -2399,6 +2657,7 @@ document.getElementById(
         "champion/table": null,
         "champion/registered": false,
         systemOverrideReady: false,
+        gameMasterRevealReady: false,
         roundComplete: false
       }
     );
