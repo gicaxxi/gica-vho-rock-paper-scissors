@@ -59,7 +59,12 @@ h1 {
   background: #14213a;
 }
 
-#openRegistrationButton {
+.admin-button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+#initializeBattleButton {
   margin-bottom: 30px;
 }
 
@@ -166,6 +171,10 @@ h1 {
     OPEN CHAMPION REGISTRATION
   </button>
 
+  <button id="initializeBattleButton" class="admin-button" disabled>
+    INITIALIZE FINAL BATTLE
+  </button>
+
   <div class="instruction">
     Choose your move, then lock it in.
   </div>
@@ -245,6 +254,7 @@ const buttons = document.querySelectorAll(".choice");
 const lockButton = document.getElementById("lockButton");
 const startIntroButton = document.getElementById("startIntroButton");
 const openRegistrationButton = document.getElementById("openRegistrationButton");
+const initializeBattleButton = document.getElementById("initializeBattleButton");
 const selection = document.getElementById("selection");
 const status = document.getElementById("status");
 
@@ -268,6 +278,28 @@ openRegistrationButton.addEventListener("click", async () => {
 
   openRegistrationButton.textContent =
     "REGISTRATION OPEN ✓";
+});
+
+initializeBattleButton.addEventListener("click", async () => {
+
+  await set(
+    ref(db, "game/phase"),
+    "initializing"
+  );
+
+  initializeBattleButton.textContent =
+    "FINAL BATTLE INITIALIZING ✓";
+});
+
+onValue(ref(db, "game/champion/registered"), snapshot => {
+
+  const championRegistered = snapshot.val() === true;
+
+  initializeBattleButton.disabled = !championRegistered;
+
+  if (!championRegistered) {
+    initializeBattleButton.textContent = "INITIALIZE FINAL BATTLE";
+  }
 });
 
 function resetController() {

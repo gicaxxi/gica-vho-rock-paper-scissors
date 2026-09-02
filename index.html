@@ -487,6 +487,109 @@ button:hover {
   font-weight: bold;
   letter-spacing: 3px;
 }
+
+/* FINAL BATTLE INITIALIZATION SCREEN */
+
+#initializingScreen {
+  width: 100%;
+  min-height: 560px;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.initializing-panel {
+  width: min(780px, 92%);
+  min-height: 390px;
+  padding: 55px 35px;
+  border: 2px solid #c39a4b;
+  background: #fffdf8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 10px 10px 0 rgba(20, 33, 58, .08);
+}
+
+.initializing-title {
+  margin: 0;
+  color: #14213a;
+  font-size: clamp(25px, 4vw, 42px);
+  letter-spacing: 3px;
+}
+
+.initializing-progress {
+  width: min(580px, 90%);
+  height: 30px;
+  margin-top: 42px;
+  padding: 4px;
+  border: 2px solid #c39a4b;
+  background: #f7f1e5;
+}
+
+.initializing-progress-fill {
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #7a2038, #b58a39);
+  transition: width .55s steps(8, end);
+}
+
+.initializing-percent {
+  margin-top: 18px;
+  color: #7a2038;
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.initializing-panel.override {
+  border-color: #7a2038;
+  box-shadow: 10px 10px 0 rgba(122, 32, 56, .14);
+}
+
+.initializing-panel.override .initializing-title {
+  color: #7a2038;
+}
+
+.override-heading {
+  margin-top: 26px;
+  color: #14213a;
+  font-size: clamp(19px, 3vw, 28px);
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.override-access {
+  margin-top: 22px;
+  color: #b58a39;
+  font-size: clamp(18px, 2.6vw, 25px);
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.override-verification {
+  margin-top: 38px;
+  color: #7a2038;
+  font-size: clamp(17px, 2.5vw, 23px);
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.initializing-glitch {
+  animation: elegantGlitch .38s steps(2, end);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .initializing-progress-fill {
+    transition-duration: .01ms;
+  }
+
+  .initializing-glitch {
+    animation-duration: .01ms;
+  }
+}
 /* HOST CONTROLS */
 
 .host-controls {
@@ -635,6 +738,25 @@ button:hover {
       <div class="registered-message">FINAL PLAYER CONFIRMED</div>
     </div>
 
+  </div>
+
+</div>
+
+<div id="initializingScreen" style="display:none;">
+
+  <div id="initializingPanel" class="initializing-panel">
+    <h2 id="initializingTitle" class="initializing-title">
+      INITIALIZING FINAL BATTLE...
+    </h2>
+
+    <div id="initializingProgress" class="initializing-progress">
+      <div id="initializingProgressFill" class="initializing-progress-fill"></div>
+    </div>
+
+    <div id="initializingPercent" class="initializing-percent">0%</div>
+    <div id="overrideHeading" class="override-heading"></div>
+    <div id="overrideAccess" class="override-access"></div>
+    <div id="overrideVerification" class="override-verification"></div>
   </div>
 
 </div>
@@ -822,6 +944,8 @@ ref(db, "game");
 let resolving = false;
 let roundTransitionRunning = false;
 let entrancePlayed = false;
+let initializationPlayed = false;
+let currentPhase = "idle";
 
 
 /* ---------------------------
@@ -1182,6 +1306,8 @@ const player2Connected =
 const phase =
   data.phase || "idle";
 
+currentPhase = phase;
+
 const championRegistered =
   data.champion?.registered === true;
 
@@ -1252,6 +1378,7 @@ if (player1Connected && player2Connected) {
 if (phase === "registration") {
 
   entrancePlayed = false;
+  initializationPlayed = false;
 
   document.getElementById(
     "joinScreen"
@@ -1263,6 +1390,10 @@ if (phase === "registration") {
 
   document.getElementById(
     "battleScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
   ).style.display = "none";
 
   const registrationScreen =
@@ -1297,6 +1428,8 @@ if (phase === "registration") {
 
 } else if (phase === "intro") {
 
+  initializationPlayed = false;
+
   if (!entrancePlayed) {
 
     entrancePlayed = true;
@@ -1313,6 +1446,10 @@ if (phase === "registration") {
 
   document.getElementById(
     "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
   ).style.display = "none";
 
   const entranceScreen =
@@ -1432,7 +1569,7 @@ if (phase === "registration") {
     
 }
   
-} else if (phase === "battle") {
+} else if (phase === "initializing") {
 
   entrancePlayed = false;
 
@@ -1450,11 +1587,150 @@ if (phase === "registration") {
 
   document.getElementById(
     "battleScreen"
+  ).style.display = "none";
+
+  const initializingScreen =
+    document.getElementById("initializingScreen");
+
+  initializingScreen.style.display = "flex";
+
+  if (!initializationPlayed) {
+
+    initializationPlayed = true;
+
+    setTimeout(async () => {
+
+      if (currentPhase !== "initializing") return;
+
+      const initializingPanel =
+        document.getElementById("initializingPanel");
+
+      const initializingTitle =
+        document.getElementById("initializingTitle");
+
+      const initializingProgress =
+        document.getElementById("initializingProgress");
+
+      const initializingProgressFill =
+        document.getElementById("initializingProgressFill");
+
+      const initializingPercent =
+        document.getElementById("initializingPercent");
+
+      const overrideHeading =
+        document.getElementById("overrideHeading");
+
+      const overrideAccess =
+        document.getElementById("overrideAccess");
+
+      const overrideVerification =
+        document.getElementById("overrideVerification");
+
+      initializingPanel.className = "initializing-panel";
+      initializingTitle.textContent = "INITIALIZING FINAL BATTLE...";
+      initializingProgress.style.display = "block";
+      initializingProgressFill.style.width = "0%";
+      initializingPercent.style.display = "block";
+      initializingPercent.textContent = "0%";
+      overrideHeading.textContent = "";
+      overrideAccess.textContent = "";
+      overrideVerification.textContent = "";
+
+      const progressSteps = [
+        { value: 25, delay: 700 },
+        { value: 47, delay: 800 },
+        { value: 68, delay: 750 },
+        { value: 82, delay: 850 },
+        { value: 90, delay: 900 }
+      ];
+
+      for (const step of progressSteps) {
+
+        await sleep(step.delay);
+
+        if (currentPhase !== "initializing") return;
+
+        initializingProgressFill.style.width = step.value + "%";
+        initializingPercent.textContent = step.value + "%";
+      }
+
+      await sleep(1800);
+
+      if (currentPhase !== "initializing") return;
+
+      try {
+
+        await new Promise(resolve => {
+
+          let finished = false;
+
+          const finish = () => {
+
+            if (finished) return;
+
+            finished = true;
+            initializingPanel.classList.remove("initializing-glitch");
+            resolve();
+          };
+
+          initializingPanel.addEventListener(
+            "animationend",
+            finish,
+            { once: true }
+          );
+
+          initializingPanel.classList.add("initializing-glitch");
+          setTimeout(finish, 550);
+        });
+
+      } catch (error) {
+
+        initializingPanel.classList.remove("initializing-glitch");
+        await sleep(400);
+      }
+
+      if (currentPhase !== "initializing") return;
+
+      initializingPanel.className = "initializing-panel override";
+      initializingTitle.textContent = "⚠️ SYSTEM OVERRIDE";
+      initializingProgress.style.display = "none";
+      initializingPercent.style.display = "none";
+      overrideHeading.textContent = "ADMINISTRATOR ACCESS DETECTED";
+      overrideAccess.textContent = "ACCESS LEVEL: ███████";
+      overrideVerification.textContent = "IDENTITY VERIFICATION REQUIRED";
+
+    }, 500);
+  }
+
+} else if (phase === "battle") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "entranceScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
   ).style.display = "block";
 
 } else {
 
   entrancePlayed = false;
+  initializationPlayed = false;
   
   document.getElementById(
     "joinScreen"
@@ -1472,6 +1748,10 @@ document.getElementById(
 
   document.getElementById(
     "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
   ).style.display = "none";
 
 }
