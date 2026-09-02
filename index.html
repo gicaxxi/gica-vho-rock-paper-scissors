@@ -306,7 +306,7 @@ button:hover {
 
 }
 
-/* ENTRANCE SCREEN */
+/* CINEMATIC INTRO SCREEN */
 
 #entranceScreen {
   width: 100%;
@@ -318,73 +318,95 @@ button:hover {
   text-align: center;
 }
 
-.entrance-small {
-  margin-top: 14px;
-  color: #b58a39;
-  font-size: 14px;
-  font-weight: bold;
-  letter-spacing: 4px;
-}
-
-.entrance-stage {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 55px;
-  margin-top: 60px;
-}
-
-.entrance-side {
-  width: 310px;
-  min-height: 220px;
-  padding: 35px 25px;
+.intro-panel {
+  width: min(780px, 92%);
+  min-height: 390px;
+  padding: 55px 35px;
   border: 2px solid #c39a4b;
+  background: #fffdf8;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
+  box-shadow: 10px 10px 0 rgba(20, 33, 58, .08);
 }
 
-.champion-side {
-  background: #7a2038;
-  color: white;
-}
-
-.boss-side {
-  background: #14213a;
-  color: white;
-}
-
-.entrance-icon {
-  font-size: 58px;
-  margin-bottom: 14px;
-}
-
-.entrance-role {
-  font-size: 28px;
-  font-weight: bold;
-  letter-spacing: 3px;
-}
-
-.entrance-name {
-  margin-top: 8px;
-  color: #e5bd68;
-  font-size: 18px;
-  font-weight: bold;
-  letter-spacing: 2px;
-}
-
-.entrance-vs {
+.intro-icon {
+  min-height: 70px;
+  margin-bottom: 10px;
   color: #b58a39;
-  font-size: 38px;
-  font-weight: bold;
+  font-size: 58px;
+  line-height: 1;
 }
 
-.entrance-message {
-  margin-top: 45px;
+.intro-title {
+  margin: 0;
   color: #7a2038;
-  font-size: 27px;
+  font-size: clamp(30px, 5vw, 52px);
+  letter-spacing: 3px;
+}
+
+.intro-heading {
+  margin-top: 20px;
+  color: #14213a;
+  font-size: clamp(21px, 3vw, 31px);
   font-weight: bold;
   letter-spacing: 3px;
+}
+
+.intro-copy {
+  min-height: 30px;
+  margin-top: 18px;
+  color: #755e38;
+  font-size: clamp(17px, 2.2vw, 22px);
+  line-height: 1.5;
+}
+
+.intro-suspense {
+  min-height: 55px;
+  margin-top: 20px;
+  color: #b58a39;
+  font-size: 42px;
+  font-weight: bold;
+  letter-spacing: 8px;
+}
+
+.intro-panel.interrupt .intro-title {
+  color: #14213a;
+}
+
+.intro-panel.reveal {
+  border-color: #7a2038;
+  background: #14213a;
+  box-shadow: 10px 10px 0 rgba(122, 32, 56, .16);
+}
+
+.intro-panel.reveal .intro-title,
+.intro-panel.reveal .intro-copy {
+  color: #fffdf8;
+}
+
+.intro-panel.reveal .intro-heading,
+.intro-panel.reveal .intro-suspense {
+  color: #e5bd68;
+}
+
+.intro-glitch {
+  animation: elegantGlitch .38s steps(2, end);
+}
+
+@keyframes elegantGlitch {
+  0%   { opacity: 1; transform: translate(0); filter: none; }
+  25%  { opacity: .72; transform: translate(-3px, 1px); filter: contrast(1.12); }
+  50%  { opacity: .9; transform: translate(3px, -1px); filter: saturate(.8); }
+  75%  { opacity: .76; transform: translate(-1px, 0); filter: contrast(1.08); }
+  100% { opacity: 1; transform: translate(0); filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-glitch {
+    animation-duration: .01ms;
+  }
 }
 /* HOST CONTROLS */
 
@@ -498,35 +520,12 @@ button:hover {
 
 <div id="entranceScreen" style="display:none;">
 
-  <div class="brand">
-    GICA & VHO
-  </div>
-
-  <div class="entrance-small">
-    FINAL BOSS BATTLE
-  </div>
-
-  <div class="entrance-stage">
-
-    <div class="entrance-side champion-side">
-      <div class="entrance-icon">🏆</div>
-      <div class="entrance-role">CHAMPION</div>
-    </div>
-
-    <div class="entrance-vs">
-      VS
-    </div>
-
-    <div class="entrance-side boss-side">
-      <div class="entrance-icon">👑</div>
-      <div class="entrance-role">FINAL BOSS</div>
-      <div class="entrance-name">GICA & VHO</div>
-    </div>
-
-  </div>
-
-  <div id="entranceMessage" class="entrance-message">
-    PREPARE FOR BATTLE
+  <div id="introPanel" class="intro-panel">
+    <div id="introIcon" class="intro-icon"></div>
+    <h2 id="introTitle" class="intro-title"></h2>
+    <div id="introHeading" class="intro-heading"></div>
+    <div id="introCopy" class="intro-copy"></div>
+    <div id="introSuspense" class="intro-suspense"></div>
   </div>
 
 </div>
@@ -1137,31 +1136,115 @@ if (
   const entranceScreen =
     document.getElementById("entranceScreen");
 
-  const entranceMessage =
-    document.getElementById("entranceMessage");
+  const introPanel =
+    document.getElementById("introPanel");
+
+  const introIcon =
+    document.getElementById("introIcon");
+
+  const introTitle =
+    document.getElementById("introTitle");
+
+  const introHeading =
+    document.getElementById("introHeading");
+
+  const introCopy =
+    document.getElementById("introCopy");
+
+  const introSuspense =
+    document.getElementById("introSuspense");
+
+  function showIntroScene({
+    icon = "",
+    title = "",
+    heading = "",
+    copy = "",
+    suspense = "",
+    style = ""
+  }) {
+
+    introPanel.className =
+      "intro-panel" + (style ? " " + style : "");
+
+    introIcon.hidden = !icon;
+    introIcon.textContent = icon;
+    introTitle.textContent = title;
+    introHeading.textContent = heading;
+    introCopy.textContent = copy;
+    introSuspense.textContent = suspense;
+  }
+
+  async function playIntroGlitch() {
+
+    try {
+
+      await new Promise(resolve => {
+
+        let finished = false;
+
+        const finish = () => {
+
+          if (finished) return;
+
+          finished = true;
+          introPanel.classList.remove("intro-glitch");
+          resolve();
+        };
+
+        introPanel.addEventListener(
+          "animationend",
+          finish,
+          { once: true }
+        );
+
+        introPanel.classList.add("intro-glitch");
+
+        setTimeout(finish, 550);
+      });
+
+    } catch (error) {
+
+      introPanel.classList.remove("intro-glitch");
+      await sleep(400);
+    }
+  }
 
   entranceScreen.style.display = "flex";
 
-  entranceMessage.textContent =
-    "CHAMPION ENTERS THE ARENA";
+  showIntroScene({
+    title: "🏆 CHAMPION FOUND",
+    heading: "CONGRATULATIONS!",
+    copy: "You survived the Battle of the Champions."
+  });
 
-  await sleep(1300);
+  await sleep(2800);
+  await playIntroGlitch();
 
-  entranceMessage.textContent =
-    "THE FINAL BOSS HAS ARRIVED";
+  showIntroScene({
+    title: "⚠️ WAIT…",
+    heading: "THE GAME IS NOT OVER.",
+    style: "interrupt"
+  });
 
-  await sleep(1300);
+  await sleep(2000);
+  await playIntroGlitch();
 
-  entranceMessage.textContent =
-    "BATTLE START!";
+  showIntroScene({
+    title: "FINAL CHALLENGE DETECTED",
+    copy: "Loading opponent…",
+    suspense: "???"
+  });
 
-  await sleep(1000);
+  await sleep(3500);
+  await playIntroGlitch();
 
-  entranceScreen.style.display = "none";
-
-  document.getElementById(
-    "battleScreen"
-  ).style.display = "block";
+  showIntroScene({
+    icon: "👑",
+    title: "FINAL BOSS UNLOCKED",
+    heading: "THE COUPLE",
+    copy: "FINAL PLAYER vs. THE COUPLE",
+    style: "reveal"
+  });
 
 }, 1200);
     
