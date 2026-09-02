@@ -1698,6 +1698,10 @@ async function resolveRound(data) {
     score2 >= 2
   ) {
 
+    document.getElementById(
+      "winnerScreen"
+    ).style.display = "none";
+
     await sleep(1600);
 
     await showMatchWinner(
