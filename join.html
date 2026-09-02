@@ -4,204 +4,288 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Join the Final Boss Battle | Gica & Vho</title>
+<title>Champion Registration | Gica & Vho</title>
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   min-height: 100vh;
+  padding: 24px;
   background: #f7f1e5;
   color: #14213a;
   font-family: Arial, sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 30px;
 }
 
-.screen {
+.registration-card {
   width: 100%;
-  max-width: 1200px;
-  min-height: 650px;
-  background: #fffdf8;
+  max-width: 520px;
+  padding: 38px 30px;
   border: 2px solid #c39a4b;
+  background: #fffdf8;
   text-align: center;
-  padding: 45px;
+  box-shadow: 10px 10px 0 rgba(20, 33, 58, .08);
 }
 
 .brand {
   color: #7a2038;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: bold;
   letter-spacing: 5px;
 }
 
 h1 {
-  margin: 15px 0 5px;
-  font-size: clamp(38px, 5vw, 62px);
+  margin: 18px 0 8px;
+  color: #14213a;
+  font-size: clamp(30px, 8vw, 44px);
 }
 
 .subtitle {
+  margin-bottom: 28px;
   color: #b58a39;
   font-weight: bold;
-  letter-spacing: 4px;
-  margin-bottom: 35px;
+  letter-spacing: 3px;
 }
 
-.players {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 45px;
+label {
+  display: block;
+  margin: 18px 0 8px;
+  color: #7a2038;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-align: left;
 }
 
-.player {
-  width: 320px;
-  padding: 25px;
-  border: 2px solid #c39a4b;
-  background: #f7f1e5;
+input {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #c39a4b;
+  background: white;
+  color: #14213a;
+  font: inherit;
+  font-size: 18px;
 }
 
-.role {
+input:focus {
+  outline: 3px solid rgba(181, 138, 57, .24);
+  border-color: #7a2038;
+}
+
+button,
+.arena-link {
+  width: 100%;
+  margin-top: 26px;
+  padding: 17px;
+  border: 0;
+  background: #14213a;
+  color: white;
+  font-size: 17px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+button:hover,
+.arena-link:hover {
+  background: #7a2038;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+#formMessage {
+  min-height: 24px;
+  margin-top: 16px;
   color: #7a2038;
   font-weight: bold;
-  letter-spacing: 2px;
-  font-size: 15px;
 }
 
-.name {
-  margin: 7px 0 18px;
-  font-size: 24px;
+#successState { display: none; }
+
+.success-mark {
+  margin: 22px 0 14px;
+  color: #7a2038;
+  font-size: 52px;
+}
+
+.success-name {
+  color: #7a2038;
+  font-size: 32px;
   font-weight: bold;
 }
 
-.qr {
-  width: 210px;
-  height: 210px;
-  margin: auto;
-  padding: 10px;
-  background: white;
-  border: 1px solid #c39a4b;
-}
-
-.qr img {
-  width: 100%;
-  height: 100%;
-}
-
-.scan {
-  margin-top: 15px;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 1px;
-}
-
-.vs {
+.success-table {
+  margin-top: 10px;
   color: #b58a39;
-  font-size: 28px;
+  font-size: 22px;
   font-weight: bold;
-}
-
-.footer {
-  margin-top: 35px;
-  color: #755e38;
-  font-size: 14px;
   letter-spacing: 2px;
 }
 
-@media(max-width: 750px) {
-  .players {
-    flex-direction: column;
-  }
+.success-copy {
+  margin-top: 18px;
+  line-height: 1.5;
+}
 
-  .screen {
-    padding: 30px 15px;
-  }
-
-  .vs {
-    margin: -10px 0;
-  }
+.arena-link {
+  display: block;
+  text-decoration: none;
 }
 </style>
 </head>
 
 <body>
 
-<div class="screen">
+<main class="registration-card">
 
-  <div class="brand">
-    GICA & VHO
-  </div>
+  <div class="brand">GICA & VHO</div>
 
-  <h1>
-    JOIN THE BATTLE
-  </h1>
+  <section id="formState">
+    <h1>🏆 FINAL CHAMPION</h1>
+    <div class="subtitle">REGISTER TO CONTINUE</div>
 
-  <div class="subtitle">
-    FINAL BOSS CHALLENGE
-  </div>
+    <form id="championForm">
+      <label for="championName">CHAMPION NAME</label>
+      <input
+        id="championName"
+        name="championName"
+        type="text"
+        maxlength="40"
+        autocomplete="name"
+        required>
 
-  <div class="players">
+      <label for="tableNumber">TABLE NUMBER</label>
+      <input
+        id="tableNumber"
+        name="tableNumber"
+        type="number"
+        min="1"
+        step="1"
+        inputmode="numeric"
+        required>
 
-    <div class="player">
+      <button id="registerButton" type="submit">
+        REGISTER CHAMPION
+      </button>
 
-      <div class="role">
-        🏆 CHAMPION
-      </div>
+      <div id="formMessage" role="status" aria-live="polite"></div>
+    </form>
+  </section>
 
-      <div class="name">
-        PLAYER
-      </div>
+  <section id="successState" aria-live="polite">
+    <div class="success-mark">✓</div>
+    <h1>CHAMPION REGISTERED</h1>
+    <div id="successName" class="success-name"></div>
+    <div id="successTable" class="success-table"></div>
+    <div class="success-copy">Your place in the Final Boss battle is confirmed.</div>
 
-      <div class="qr">
-        <img
-          src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https%3A%2F%2Fgicaxxi.github.io%2Fgica-vho-rock-paper-scissors%2Fplayer1.html"
-          alt="Champion QR Code">
-      </div>
+    <a class="arena-link" href="player1.html">
+      ENTER THE ARENA
+    </a>
+  </section>
 
-      <div class="scan">
-        SCAN TO JOIN
-      </div>
+</main>
 
-    </div>
+<script type="module">
 
-    <div class="vs">
-      VS
-    </div>
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 
-    <div class="player">
+import {
+  getDatabase,
+  ref,
+  update
+}
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
-      <div class="role">
-        👑 FINAL BOSS
-      </div>
+const firebaseConfig = {
+  apiKey: "AIzaSyAu56OSm_csaTXPyGrKfy_wTYY9DsPhMW8",
+  authDomain: "gica-vho-wedding-game.firebaseapp.com",
+  databaseURL: "https://gica-vho-wedding-game-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "gica-vho-wedding-game",
+  storageBucket: "gica-vho-wedding-game.firebasestorage.app",
+  messagingSenderId: "544288400742",
+  appId: "1:544288400742:web:c26d421bb4486a4e1814a7"
+};
 
-      <div class="name">
-        GICA & VHO
-      </div>
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-      <div class="qr">
-        <img
-          src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https%3A%2F%2Fgicaxxi.github.io%2Fgica-vho-rock-paper-scissors%2Fplayer2.html"
-          alt="Final Boss QR Code">
-      </div>
+const championForm =
+  document.getElementById("championForm");
 
-      <div class="scan">
-        SCAN TO JOIN
-      </div>
+const registerButton =
+  document.getElementById("registerButton");
 
-    </div>
+const formMessage =
+  document.getElementById("formMessage");
 
-  </div>
+championForm.addEventListener("submit", async event => {
 
-  <div class="footer">
-    SCAN YOUR SIDE'S QR CODE TO ENTER THE ARENA
-  </div>
+  event.preventDefault();
 
-</div>
+  const name =
+    document.getElementById("championName").value.trim();
+
+  const table =
+    Number(document.getElementById("tableNumber").value);
+
+  if (!name || !Number.isInteger(table) || table < 1) {
+
+    formMessage.textContent =
+      "Enter your name and a valid table number.";
+
+    return;
+  }
+
+  registerButton.disabled = true;
+  registerButton.textContent = "REGISTERING...";
+  formMessage.textContent = "";
+
+  try {
+
+    await update(
+      ref(db, "game/champion"),
+      {
+        name,
+        table,
+        registered: true
+      }
+    );
+
+    document.getElementById(
+      "successName"
+    ).textContent = name.toUpperCase();
+
+    document.getElementById(
+      "successTable"
+    ).textContent = "TABLE " + table;
+
+    document.getElementById(
+      "formState"
+    ).style.display = "none";
+
+    document.getElementById(
+      "successState"
+    ).style.display = "block";
+
+  } catch (error) {
+
+    registerButton.disabled = false;
+    registerButton.textContent = "REGISTER CHAMPION";
+    formMessage.textContent =
+      "Registration failed. Please try again.";
+  }
+});
+
+</script>
 
 </body>
 </html>

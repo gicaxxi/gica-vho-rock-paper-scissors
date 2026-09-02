@@ -408,6 +408,85 @@ button:hover {
     animation-duration: .01ms;
   }
 }
+
+/* CHAMPION REGISTRATION SCREEN */
+
+#registrationScreen {
+  width: 100%;
+  min-height: 560px;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.registration-panel {
+  width: min(720px, 94%);
+  padding: 42px 30px;
+  border: 2px solid #c39a4b;
+  background: #fffdf8;
+  box-shadow: 10px 10px 0 rgba(20, 33, 58, .08);
+}
+
+.registration-title {
+  margin: 12px 0 6px;
+  color: #7a2038;
+  font-size: clamp(32px, 5vw, 52px);
+  letter-spacing: 3px;
+}
+
+.registration-heading {
+  color: #14213a;
+  font-size: clamp(21px, 3vw, 29px);
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.registration-qr {
+  width: min(300px, 75vw);
+  aspect-ratio: 1;
+  margin: 28px auto 20px;
+  padding: 12px;
+  border: 2px solid #c39a4b;
+  background: white;
+}
+
+.registration-qr img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.registration-copy {
+  color: #755e38;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.registered-name {
+  margin-top: 28px;
+  color: #7a2038;
+  font-size: clamp(34px, 6vw, 58px);
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.registered-table {
+  margin-top: 12px;
+  color: #b58a39;
+  font-size: clamp(23px, 4vw, 34px);
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.registered-message {
+  margin-top: 24px;
+  color: #14213a;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 3px;
+}
 /* HOST CONTROLS */
 
 .host-controls {
@@ -529,6 +608,37 @@ button:hover {
   </div>
 
 </div>
+
+<div id="registrationScreen" style="display:none;">
+
+  <div class="registration-panel">
+
+    <div class="brand">GICA & VHO</div>
+
+    <div id="registrationWaiting">
+      <h2 class="registration-title">🏆 FINAL CHAMPION</h2>
+      <div class="registration-heading">SCAN TO REGISTER</div>
+
+      <div class="registration-qr">
+        <img id="registrationQr" alt="Champion Registration QR Code">
+      </div>
+
+      <div class="registration-copy">
+        Enter your name and table number to continue.
+      </div>
+    </div>
+
+    <div id="registrationComplete" style="display:none;">
+      <h2 class="registration-title">CHAMPION REGISTERED ✓</h2>
+      <div id="registeredChampionName" class="registered-name"></div>
+      <div id="registeredChampionTable" class="registered-table"></div>
+      <div class="registered-message">FINAL PLAYER CONFIRMED</div>
+    </div>
+
+  </div>
+
+</div>
+
 <div id="battleScreen" style="display:none;">
   
   <div class="brand">
@@ -1072,6 +1182,15 @@ const player2Connected =
 const phase =
   data.phase || "idle";
 
+const championRegistered =
+  data.champion?.registered === true;
+
+const championName =
+  data.champion?.name || "";
+
+const championTable =
+  data.champion?.table || "";
+
 
 /* JOIN SCREEN STATUS */
 
@@ -1108,7 +1227,53 @@ if (player2Connected) {
 
 }
 
-if (
+if (phase === "registration") {
+
+  entrancePlayed = false;
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "entranceScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
+  ).style.display = "none";
+
+  const registrationScreen =
+    document.getElementById("registrationScreen");
+
+  const registrationWaiting =
+    document.getElementById("registrationWaiting");
+
+  const registrationComplete =
+    document.getElementById("registrationComplete");
+
+  registrationScreen.style.display = "flex";
+
+  if (championRegistered) {
+
+    registrationWaiting.style.display = "none";
+    registrationComplete.style.display = "block";
+
+    document.getElementById(
+      "registeredChampionName"
+    ).textContent = championName.toUpperCase();
+
+    document.getElementById(
+      "registeredChampionTable"
+    ).textContent = "TABLE " + championTable;
+
+  } else {
+
+    registrationWaiting.style.display = "block";
+    registrationComplete.style.display = "none";
+  }
+
+} else if (
   player1Connected &&
   player2Connected &&
   phase === "intro"
@@ -1131,6 +1296,10 @@ if (
 
   document.getElementById(
     "battleScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "registrationScreen"
   ).style.display = "none";
 
   const entranceScreen =
@@ -1268,6 +1437,10 @@ document.getElementById(
   ).style.display =
     "none";
 
+  document.getElementById(
+    "registrationScreen"
+  ).style.display = "none";
+
 }
 
   document.getElementById(
@@ -1365,6 +1538,8 @@ else {
 }
 
 if (
+  phase === "battle"
+  &&
   data.player1?.choice
   &&
   data.player2?.choice
@@ -1469,6 +1644,15 @@ document.getElementById(
     "score/player2":
       0,
 
+    "champion/name":
+      null,
+
+    "champion/table":
+      null,
+
+    "champion/registered":
+      false,
+
     roundComplete:
       false
 
@@ -1499,6 +1683,9 @@ document.getElementById(
         "player2/choice": null,
         "score/player1": 0,
         "score/player2": 0,
+        "champion/name": null,
+        "champion/table": null,
+        "champion/registered": false,
         roundComplete: false
       }
     );
@@ -1521,7 +1708,16 @@ document.getElementById(
     ).textContent = "?";
 
   }
-); 
+);
+
+const registrationUrl =
+  new URL("join.html", window.location.href).href;
+
+document.getElementById(
+  "registrationQr"
+).src =
+  "https://api.qrserver.com/v1/create-qr-code/?size=600x600&data="
+  + encodeURIComponent(registrationUrl);
 </script>
 
 </body>
