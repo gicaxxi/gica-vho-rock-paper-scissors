@@ -590,6 +590,184 @@ button:hover {
     animation-duration: .01ms;
   }
 }
+
+/* GAME MASTERS REVEAL SCREEN */
+
+#gameMasterRevealScreen {
+  width: 100%;
+  min-height: 560px;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.game-master-panel {
+  width: min(820px, 94%);
+  min-height: 430px;
+  padding: 42px 30px;
+  border: 2px solid #7a2038;
+  background: #fffdf8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 10px 10px 0 rgba(20, 33, 58, .09);
+}
+
+.game-master-kicker {
+  min-height: 26px;
+  color: #b58a39;
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 4px;
+}
+
+.game-master-title {
+  margin: 16px 0 0;
+  color: #14213a;
+  font-size: clamp(25px, 4.5vw, 46px);
+  letter-spacing: 3px;
+}
+
+.game-master-countdown {
+  min-height: 76px;
+  margin-top: 18px;
+  color: #7a2038;
+  font-size: 68px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.avatar-pair {
+  display: flex;
+  justify-content: center;
+  gap: clamp(34px, 9vw, 100px);
+  margin-top: 28px;
+}
+
+.pixel-character-card {
+  width: 150px;
+  min-height: 190px;
+  padding: 22px 18px 16px;
+  border: 2px solid #c39a4b;
+  background: #f7f1e5;
+}
+
+.pixel-avatar {
+  position: relative;
+  width: 92px;
+  height: 118px;
+  margin: 0 auto;
+  image-rendering: pixelated;
+  filter: brightness(0) saturate(0);
+  opacity: .82;
+  transition: filter .45s steps(4, end), opacity .45s;
+}
+
+.pixel-avatar::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 26px;
+  width: 40px;
+  height: 42px;
+  background: #d8a078;
+  border: 8px solid #14213a;
+  box-shadow: -8px 8px 0 #14213a, 8px 8px 0 #14213a;
+}
+
+.pixel-avatar::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  bottom: 4px;
+  width: 56px;
+  height: 56px;
+  background: #7a2038;
+  border: 8px solid #14213a;
+  box-shadow: -14px 18px 0 #7a2038, 14px 18px 0 #7a2038;
+}
+
+.pixel-avatar.groom::before {
+  border-top-width: 12px;
+  box-shadow: -8px 5px 0 #14213a, 8px 5px 0 #14213a;
+}
+
+.pixel-avatar.groom::after {
+  background: #14213a;
+  box-shadow: -14px 18px 0 #14213a, 14px 18px 0 #14213a,
+              0 14px 0 #e5bd68;
+}
+
+.pixel-avatar.revealed {
+  filter: none;
+  opacity: 1;
+}
+
+.pixel-name {
+  min-height: 24px;
+  margin-top: 16px;
+  color: #7a2038;
+  font-size: 21px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  visibility: hidden;
+}
+
+.pixel-name.revealed {
+  visibility: visible;
+}
+
+.game-master-support {
+  min-height: 25px;
+  margin-top: 24px;
+  color: #755e38;
+  font-size: 17px;
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.game-master-confirmation {
+  min-height: 24px;
+  margin-top: 14px;
+  color: #b58a39;
+  font-size: 17px;
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.game-master-panel.revealed .game-master-title {
+  color: #7a2038;
+  font-size: clamp(32px, 5.5vw, 56px);
+}
+
+.game-master-glitch {
+  animation: elegantGlitch .38s steps(2, end);
+}
+
+@media(max-width:600px) {
+  .avatar-pair {
+    gap: 18px;
+  }
+
+  .pixel-character-card {
+    width: 125px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-avatar {
+    transition-duration: .01ms;
+  }
+
+  .game-master-glitch {
+    animation-duration: .01ms;
+  }
+}
 /* HOST CONTROLS */
 
 .host-controls {
@@ -757,6 +935,37 @@ button:hover {
     <div id="overrideHeading" class="override-heading"></div>
     <div id="overrideAccess" class="override-access"></div>
     <div id="overrideVerification" class="override-verification"></div>
+  </div>
+
+</div>
+
+<div id="gameMasterRevealScreen" style="display:none;">
+
+  <div id="gameMasterPanel" class="game-master-panel">
+    <div id="gameMasterKicker" class="game-master-kicker">
+      SYSTEM OVERRIDE
+    </div>
+
+    <h2 id="gameMasterTitle" class="game-master-title">
+      IDENTITY VERIFICATION IN PROGRESS...
+    </h2>
+
+    <div id="gameMasterCountdown" class="game-master-countdown"></div>
+
+    <div class="avatar-pair">
+      <div class="pixel-character-card">
+        <div id="gicaAvatar" class="pixel-avatar bride"></div>
+        <div id="gicaName" class="pixel-name">GICA</div>
+      </div>
+
+      <div class="pixel-character-card">
+        <div id="vhoAvatar" class="pixel-avatar groom"></div>
+        <div id="vhoName" class="pixel-name">VHO</div>
+      </div>
+    </div>
+
+    <div id="gameMasterSupport" class="game-master-support"></div>
+    <div id="gameMasterConfirmation" class="game-master-confirmation"></div>
   </div>
 
 </div>
@@ -945,6 +1154,7 @@ let resolving = false;
 let roundTransitionRunning = false;
 let entrancePlayed = false;
 let initializationPlayed = false;
+let gameMasterRevealPlayed = false;
 let currentPhase = "idle";
 
 
@@ -1379,6 +1589,7 @@ if (phase === "registration") {
 
   entrancePlayed = false;
   initializationPlayed = false;
+  gameMasterRevealPlayed = false;
 
   document.getElementById(
     "joinScreen"
@@ -1394,6 +1605,10 @@ if (phase === "registration") {
 
   document.getElementById(
     "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "gameMasterRevealScreen"
   ).style.display = "none";
 
   const registrationScreen =
@@ -1429,6 +1644,7 @@ if (phase === "registration") {
 } else if (phase === "intro") {
 
   initializationPlayed = false;
+  gameMasterRevealPlayed = false;
 
   if (!entrancePlayed) {
 
@@ -1450,6 +1666,10 @@ if (phase === "registration") {
 
   document.getElementById(
     "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "gameMasterRevealScreen"
   ).style.display = "none";
 
   const entranceScreen =
@@ -1572,6 +1792,7 @@ if (phase === "registration") {
 } else if (phase === "initializing") {
 
   entrancePlayed = false;
+  gameMasterRevealPlayed = false;
 
   document.getElementById(
     "joinScreen"
@@ -1589,6 +1810,10 @@ if (phase === "registration") {
     "battleScreen"
   ).style.display = "none";
 
+  document.getElementById(
+    "gameMasterRevealScreen"
+  ).style.display = "none";
+
   const initializingScreen =
     document.getElementById("initializingScreen");
 
@@ -1599,6 +1824,13 @@ if (phase === "registration") {
     initializationPlayed = true;
 
     setTimeout(async () => {
+
+      if (currentPhase !== "initializing") return;
+
+      await set(
+        ref(db, "game/systemOverrideReady"),
+        false
+      );
 
       if (currentPhase !== "initializing") return;
 
@@ -1699,10 +1931,15 @@ if (phase === "registration") {
       overrideAccess.textContent = "ACCESS LEVEL: ███████";
       overrideVerification.textContent = "IDENTITY VERIFICATION REQUIRED";
 
+      await set(
+        ref(db, "game/systemOverrideReady"),
+        true
+      );
+
     }, 500);
   }
 
-} else if (phase === "battle") {
+} else if (phase === "game-master-reveal") {
 
   entrancePlayed = false;
   initializationPlayed = false;
@@ -1725,12 +1962,167 @@ if (phase === "registration") {
 
   document.getElementById(
     "battleScreen"
+  ).style.display = "none";
+
+  const gameMasterRevealScreen =
+    document.getElementById("gameMasterRevealScreen");
+
+  gameMasterRevealScreen.style.display = "flex";
+
+  if (!gameMasterRevealPlayed) {
+
+    gameMasterRevealPlayed = true;
+
+    setTimeout(async () => {
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      const gameMasterPanel =
+        document.getElementById("gameMasterPanel");
+
+      const gameMasterKicker =
+        document.getElementById("gameMasterKicker");
+
+      const gameMasterTitle =
+        document.getElementById("gameMasterTitle");
+
+      const gameMasterCountdown =
+        document.getElementById("gameMasterCountdown");
+
+      const gicaAvatar =
+        document.getElementById("gicaAvatar");
+
+      const vhoAvatar =
+        document.getElementById("vhoAvatar");
+
+      const gicaName =
+        document.getElementById("gicaName");
+
+      const vhoName =
+        document.getElementById("vhoName");
+
+      const gameMasterSupport =
+        document.getElementById("gameMasterSupport");
+
+      const gameMasterConfirmation =
+        document.getElementById("gameMasterConfirmation");
+
+      gameMasterPanel.className = "game-master-panel";
+      gameMasterKicker.textContent = "SYSTEM OVERRIDE";
+      gameMasterTitle.textContent = "IDENTITY VERIFICATION IN PROGRESS...";
+      gameMasterCountdown.textContent = "";
+      gicaAvatar.className = "pixel-avatar bride";
+      vhoAvatar.className = "pixel-avatar groom";
+      gicaName.className = "pixel-name";
+      vhoName.className = "pixel-name";
+      gameMasterSupport.textContent = "";
+      gameMasterConfirmation.textContent = "";
+
+      await sleep(1800);
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      gameMasterTitle.textContent = "IDENTIFYING ADMINISTRATORS...";
+
+      await sleep(900);
+
+      for (const number of [3, 2, 1]) {
+
+        if (currentPhase !== "game-master-reveal") return;
+
+        gameMasterCountdown.textContent = number;
+        await sleep(900);
+      }
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      try {
+
+        await new Promise(resolve => {
+
+          let finished = false;
+
+          const finish = () => {
+
+            if (finished) return;
+
+            finished = true;
+            gameMasterPanel.classList.remove("game-master-glitch");
+            resolve();
+          };
+
+          gameMasterPanel.addEventListener(
+            "animationend",
+            finish,
+            { once: true }
+          );
+
+          gameMasterPanel.classList.add("game-master-glitch");
+          setTimeout(finish, 550);
+        });
+
+      } catch (error) {
+
+        gameMasterPanel.classList.remove("game-master-glitch");
+        await sleep(400);
+      }
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      gameMasterCountdown.textContent = "";
+      gicaAvatar.classList.add("revealed");
+      vhoAvatar.classList.add("revealed");
+      gicaName.classList.add("revealed");
+      vhoName.classList.add("revealed");
+
+      await sleep(1800);
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      gameMasterPanel.className = "game-master-panel revealed";
+      gameMasterKicker.textContent = "ACCESS GRANTED ✓";
+      gameMasterTitle.textContent = "🎮 THE GAME MASTERS";
+      gameMasterSupport.textContent = "GICA & VHO";
+      gameMasterConfirmation.textContent = "ADMINISTRATORS IDENTIFIED";
+
+    }, 500);
+  }
+
+} else if (phase === "battle") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "entranceScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
   ).style.display = "block";
 
 } else {
 
   entrancePlayed = false;
   initializationPlayed = false;
+  gameMasterRevealPlayed = false;
   
   document.getElementById(
     "joinScreen"
@@ -1752,6 +2144,10 @@ document.getElementById(
 
   document.getElementById(
     "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "gameMasterRevealScreen"
   ).style.display = "none";
 
 }
@@ -1966,6 +2362,9 @@ document.getElementById(
     "champion/registered":
       false,
 
+    systemOverrideReady:
+      false,
+
     roundComplete:
       false
 
@@ -1999,6 +2398,7 @@ document.getElementById(
         "champion/name": null,
         "champion/table": null,
         "champion/registered": false,
+        systemOverrideReady: false,
         roundComplete: false
       }
     );

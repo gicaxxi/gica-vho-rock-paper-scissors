@@ -64,7 +64,7 @@ h1 {
   opacity: .45;
 }
 
-#initializeBattleButton {
+#revealGameMastersButton {
   margin-bottom: 30px;
 }
 
@@ -175,6 +175,10 @@ h1 {
     INITIALIZE FINAL BATTLE
   </button>
 
+  <button id="revealGameMastersButton" class="admin-button" disabled>
+    REVEAL GAME MASTERS
+  </button>
+
   <div class="instruction">
     Choose your move, then lock it in.
   </div>
@@ -255,6 +259,7 @@ const lockButton = document.getElementById("lockButton");
 const startIntroButton = document.getElementById("startIntroButton");
 const openRegistrationButton = document.getElementById("openRegistrationButton");
 const initializeBattleButton = document.getElementById("initializeBattleButton");
+const revealGameMastersButton = document.getElementById("revealGameMastersButton");
 const selection = document.getElementById("selection");
 const status = document.getElementById("status");
 
@@ -283,6 +288,11 @@ openRegistrationButton.addEventListener("click", async () => {
 initializeBattleButton.addEventListener("click", async () => {
 
   await set(
+    ref(db, "game/systemOverrideReady"),
+    false
+  );
+
+  await set(
     ref(db, "game/phase"),
     "initializing"
   );
@@ -291,15 +301,55 @@ initializeBattleButton.addEventListener("click", async () => {
     "FINAL BATTLE INITIALIZING ✓";
 });
 
-onValue(ref(db, "game/champion/registered"), snapshot => {
+let championRegistered = false;
+let adminPhase = "idle";
+let systemOverrideReady = false;
 
-  const championRegistered = snapshot.val() === true;
+function updateAdminControls() {
 
   initializeBattleButton.disabled = !championRegistered;
+
+  revealGameMastersButton.disabled = !(
+    adminPhase === "initializing" &&
+    systemOverrideReady
+  );
+}
+
+onValue(ref(db, "game/champion/registered"), snapshot => {
+
+  championRegistered = snapshot.val() === true;
+  updateAdminControls();
 
   if (!championRegistered) {
     initializeBattleButton.textContent = "INITIALIZE FINAL BATTLE";
   }
+});
+
+onValue(ref(db, "game/phase"), snapshot => {
+
+  adminPhase = snapshot.val() || "idle";
+  updateAdminControls();
+
+  if (adminPhase !== "game-master-reveal") {
+    revealGameMastersButton.textContent = "REVEAL GAME MASTERS";
+  }
+});
+
+onValue(ref(db, "game/systemOverrideReady"), snapshot => {
+
+  systemOverrideReady = snapshot.val() === true;
+  updateAdminControls();
+});
+
+revealGameMastersButton.addEventListener("click", async () => {
+
+  await set(
+    ref(db, "game/phase"),
+    "game-master-reveal"
+  );
+
+  revealGameMastersButton.textContent =
+    "GAME MASTERS REVEALED ✓";
 });
 
 function resetController() {
