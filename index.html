@@ -1227,6 +1227,28 @@ if (player2Connected) {
 
 }
 
+if (player1Connected && player2Connected) {
+
+  document.getElementById(
+    "joinMessage"
+  ).textContent =
+    "BOTH PLAYERS CONNECTED ✓";
+
+} else if (player1Connected || player2Connected) {
+
+  document.getElementById(
+    "joinMessage"
+  ).textContent =
+    "WAITING FOR THE OTHER SIDE";
+
+} else {
+
+  document.getElementById(
+    "joinMessage"
+  ).textContent =
+    "SCAN YOUR QR CODE TO ENTER THE ARENA";
+}
+
 if (phase === "registration") {
 
   entrancePlayed = false;
@@ -1273,16 +1295,7 @@ if (phase === "registration") {
     registrationComplete.style.display = "none";
   }
 
-} else if (
-  player1Connected &&
-  player2Connected &&
-  phase === "intro"
-) {
-
-  document.getElementById(
-    "joinMessage"
-  ).textContent =
-    "BOTH PLAYERS CONNECTED ✓";
+} else if (phase === "intro") {
 
   if (!entrancePlayed) {
 
@@ -1419,6 +1432,26 @@ if (phase === "registration") {
     
 }
   
+} else if (phase === "battle") {
+
+  entrancePlayed = false;
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "entranceScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
+  ).style.display = "block";
+
 } else {
 
   entrancePlayed = false;
