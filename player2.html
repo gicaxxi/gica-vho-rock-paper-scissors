@@ -43,6 +43,22 @@ h1 {
   margin-bottom: 35px;
 }
 
+#startIntroButton {
+  width: 100%;
+  margin-bottom: 30px;
+  padding: 18px;
+  border: 2px solid #c39a4b;
+  background: #7a2038;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#startIntroButton:hover {
+  background: #14213a;
+}
+
 .instruction {
   font-size: 19px;
   font-weight: bold;
@@ -138,6 +154,10 @@ h1 {
 
   <div class="player">PLAYER 2</div>
 
+  <button id="startIntroButton">
+    START FINAL BOSS INTRO
+  </button>
+
   <div class="instruction">
     Choose your move, then lock it in.
   </div>
@@ -215,8 +235,20 @@ let locked = false;
 
 const buttons = document.querySelectorAll(".choice");
 const lockButton = document.getElementById("lockButton");
+const startIntroButton = document.getElementById("startIntroButton");
 const selection = document.getElementById("selection");
 const status = document.getElementById("status");
+
+startIntroButton.addEventListener("click", async () => {
+
+  await set(
+    ref(db, "game/phase"),
+    "intro"
+  );
+
+  startIntroButton.textContent =
+    "INTRO STARTED ✓";
+});
 
 function resetController() {
 

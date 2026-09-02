@@ -1070,6 +1070,9 @@ onValue(
 const player2Connected =
   data.player2?.connected === true;
 
+const phase =
+  data.phase || "idle";
+
 
 /* JOIN SCREEN STATUS */
 
@@ -1108,7 +1111,8 @@ if (player2Connected) {
 
 if (
   player1Connected &&
-  player2Connected
+  player2Connected &&
+  phase === "intro"
 ) {
 
   document.getElementById(
