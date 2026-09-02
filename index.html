@@ -105,6 +105,7 @@ h1 {
   font-weight: bold;
   min-height: 50px;
   margin: 10px 0 25px;
+  white-space: pre-line;
 }
 
 /* PLAYERS */
@@ -1280,6 +1281,8 @@ let initializationPlayed = false;
 let gameMasterRevealPlayed = false;
 let battleIntroPlayed = false;
 let currentPhase = "idle";
+let battleControllersConnected = false;
+let roundRunId = 0;
 
 
 /* ---------------------------
@@ -1362,13 +1365,22 @@ async function resolveRound(data) {
 
   resolving = true;
 
+  const activeRunId = ++roundRunId;
+
+  const roundCanContinue = () =>
+    currentPhase === "battle" &&
+    battleControllersConnected &&
+    activeRunId === roundRunId;
+
 
   document.getElementById("message")
     .textContent =
-    "BOTH PLAYERS READY ✓";
+    "BOTH MOVES LOCKED ✓";
 
 
   await sleep(800);
+
+  if (!roundCanContinue()) return;
 
 
   document.getElementById("message")
@@ -1376,11 +1388,15 @@ async function resolveRound(data) {
 
   await sleep(700);
 
+  if (!roundCanContinue()) return;
+
 
   document.getElementById("message")
     .textContent = "2";
 
   await sleep(700);
+
+  if (!roundCanContinue()) return;
 
 
   document.getElementById("message")
@@ -1388,11 +1404,15 @@ async function resolveRound(data) {
 
   await sleep(700);
 
+  if (!roundCanContinue()) return;
+
 
   document.getElementById("message")
     .textContent = "SHOOT!";
 
   await sleep(550);
+
+  if (!roundCanContinue()) return;
 
 
   /* REVEAL */
@@ -1439,7 +1459,8 @@ async function resolveRound(data) {
     document.getElementById(
       "message"
     ).textContent =
-      "CHAMPION WINS THE ROUND!";
+      "ROUND " + (data.round || 1) + " WINNER\n" +
+      (data.champion?.name?.trim().toUpperCase() || "CHAMPION");
 
   }
 
@@ -1450,7 +1471,8 @@ async function resolveRound(data) {
     document.getElementById(
       "message"
     ).textContent =
-      "FINAL BOSS WINS THE ROUND!";
+      "ROUND " + (data.round || 1) + " WINNER\n" +
+      "THE GAME MASTERS";
 
   }
 
@@ -1459,7 +1481,7 @@ async function resolveRound(data) {
     document.getElementById(
       "message"
     ).textContent =
-      "IT'S A DRAW!";
+      "ROUND " + (data.round || 1) + "\nDRAW";
 
   }
 
@@ -1641,6 +1663,20 @@ const phase =
   data.phase || "idle";
 
 currentPhase = phase;
+
+battleControllersConnected =
+  player1Connected && player2Connected;
+
+if (
+  resolving &&
+  (
+    phase !== "battle" ||
+    !battleControllersConnected
+  )
+) {
+  roundRunId++;
+  resolving = false;
+}
 
 const championRegistered =
   data.champion?.registered === true;
@@ -2501,69 +2537,69 @@ else {
 
 }
 
-if (
-  phase === "battle"
-  &&
-  data.player1?.choice
-  &&
-  data.player2?.choice
-) {
+if (phase === "battle") {
 
-  resolveRound(data);
+  const championLocked = Boolean(data.player1?.choice);
+  const gameMastersLocked = Boolean(data.player2?.choice);
 
-}
+  if (!player1Connected && !player2Connected) {
 
-else if (
-  data.player1?.connected
-  &&
-  data.player2?.connected
-) {
+    document.getElementById("message").textContent =
+      "WAITING FOR BOTH CONTROLLERS TO RECONNECT";
 
-  document.getElementById(
-    "message"
-  ).textContent =
-    "BOTH PLAYERS CONNECTED ✓";
+    document.getElementById("gameStatus").textContent =
+      "Battle paused. Scores and locked moves are preserved.";
 
+  } else if (!player1Connected) {
 
-  document.getElementById(
-    "gameStatus"
-  ).textContent =
-    "Choose your moves and lock them in.";
+    document.getElementById("message").textContent =
+      "WAITING FOR CHAMPION TO RECONNECT";
 
-}
+    document.getElementById("gameStatus").textContent =
+      "Battle paused. The current score is preserved.";
 
-else if (
-  data.player1?.connected
-  ||
-  data.player2?.connected
-) {
+  } else if (!player2Connected) {
 
-  document.getElementById(
-    "message"
-  ).textContent =
-    "WAITING FOR THE OTHER SIDE";
+    document.getElementById("message").textContent =
+      "WAITING FOR GAME MASTERS TO RECONNECT";
 
+    document.getElementById("gameStatus").textContent =
+      "Battle paused. The current score is preserved.";
 
-  document.getElementById(
-    "gameStatus"
-  ).textContent =
-    "One player has joined the battle.";
+  } else if (championLocked && gameMastersLocked) {
 
-}
+    document.getElementById("message").textContent =
+      "BOTH MOVES LOCKED ✓";
 
-else {
+    document.getElementById("gameStatus").textContent =
+      "Get ready for the reveal.";
 
-  document.getElementById(
-    "message"
-  ).textContent =
-    "WAITING FOR PLAYERS";
+    resolveRound(data);
 
+  } else if (championLocked) {
 
-  document.getElementById(
-    "gameStatus"
-  ).textContent =
-    "Scan the QR code to join the battle.";
+    document.getElementById("message").textContent =
+      championDisplayName + " LOCKED ✓";
 
+    document.getElementById("gameStatus").textContent =
+      "WAITING FOR THE GAME MASTERS";
+
+  } else if (gameMastersLocked) {
+
+    document.getElementById("message").textContent =
+      "THE GAME MASTERS LOCKED ✓";
+
+    document.getElementById("gameStatus").textContent =
+      "WAITING FOR " + championDisplayName;
+
+  } else {
+
+    document.getElementById("message").textContent =
+      "WAITING FOR MOVES";
+
+    document.getElementById("gameStatus").textContent =
+      "Choose your moves and lock them in.";
+  }
 }
 
   }

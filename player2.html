@@ -187,17 +187,17 @@ h1 {
     Choose your move, then lock it in.
   </div>
 
-  <button class="choice" data-choice="rock">
+  <button class="choice" data-choice="rock" disabled>
     <span class="emoji">✊</span>
     ROCK
   </button>
 
-  <button class="choice" data-choice="paper">
+  <button class="choice" data-choice="paper" disabled>
     <span class="emoji">✋</span>
     PAPER
   </button>
 
-  <button class="choice" data-choice="scissors">
+  <button class="choice" data-choice="scissors" disabled>
     <span class="emoji">✌️</span>
     SCISSORS
   </button>
@@ -211,7 +211,7 @@ h1 {
   </button>
 
   <div id="status" class="waiting">
-    WAITING FOR YOUR MOVE
+    WAITING FOR FINAL BATTLE
   </div>
 
   <div class="footer">
@@ -258,6 +258,7 @@ let currentRound = null;
   
 let selectedChoice = null;
 let locked = false;
+let battleActive = false;
 
 const buttons = document.querySelectorAll(".choice");
 const lockButton = document.getElementById("lockButton");
@@ -347,8 +348,33 @@ onValue(ref(db, "game/champion/registered"), snapshot => {
 onValue(ref(db, "game/phase"), snapshot => {
 
   adminPhase = snapshot.val() || "idle";
+  battleActive = adminPhase === "battle";
   updateAdminControls();
   updateStartBattleControl();
+
+  if (!battleActive) {
+
+    buttons.forEach(button => {
+      button.disabled = true;
+    });
+
+    lockButton.disabled = true;
+
+    if (!locked) {
+      status.textContent = "WAITING FOR FINAL BATTLE";
+      status.className = "waiting";
+    }
+
+  } else if (!locked) {
+
+    buttons.forEach(button => {
+      button.disabled = false;
+    });
+
+    lockButton.disabled = !selectedChoice;
+    status.textContent = "WAITING FOR YOUR MOVE";
+    status.className = "waiting";
+  }
 
   if (adminPhase !== "game-master-reveal") {
     revealGameMastersButton.textContent = "REVEAL GAME MASTERS";
@@ -429,7 +455,7 @@ function resetController() {
   locked = false;
 
   buttons.forEach(button => {
-    button.disabled = false;
+    button.disabled = !battleActive;
     button.classList.remove("selected");
   });
 
@@ -440,7 +466,9 @@ function resetController() {
     "NO MOVE SELECTED";
 
   status.textContent =
-    "WAITING FOR YOUR MOVE";
+    battleActive
+      ? "WAITING FOR YOUR MOVE"
+      : "WAITING FOR FINAL BATTLE";
 
   status.className =
     "waiting";
@@ -448,7 +476,7 @@ function resetController() {
 buttons.forEach(button => {
   button.addEventListener("click", () => {
 
-    if (locked) return;
+    if (!battleActive || locked) return;
 
     selectedChoice = button.dataset.choice;
 
@@ -467,7 +495,7 @@ buttons.forEach(button => {
 
 lockButton.addEventListener("click", async () => {
 
-  if (!selectedChoice || locked) return;
+  if (!battleActive || !selectedChoice || locked) return;
 
   locked = true;
 
