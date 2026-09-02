@@ -184,6 +184,7 @@ import {
   getDatabase,
   ref,
   set,
+  update,
   onValue,
   onDisconnect
 }
@@ -214,6 +215,7 @@ onDisconnect(playerConnectionRef)
 let selectedChoice = null;
 let locked = false;
 let battleActive = false;
+let consequenceActive = false;
 
 const buttons = document.querySelectorAll(".choice");
 const lockButton = document.getElementById("lockButton");
@@ -225,27 +227,46 @@ function resetController() {
   selectedChoice = null;
   locked = false;
 
+  const controlsActive =
+    battleActive || consequenceActive;
+
   buttons.forEach(button => {
-    button.disabled = !battleActive;
+    button.disabled = !controlsActive;
     button.classList.remove("selected");
   });
 
   lockButton.disabled = true;
-  lockButton.textContent = "LOCK MY MOVE";
+  lockButton.textContent = consequenceActive
+    ? "LOCK MY CHOICE"
+    : "LOCK MY MOVE";
 
-  selection.textContent = "NO MOVE SELECTED";
+  selection.textContent = consequenceActive
+    ? "NO CHOICE SELECTED"
+    : "NO MOVE SELECTED";
 
-  status.textContent = battleActive
-    ? "WAITING FOR YOUR MOVE"
-    : "WAITING FOR FINAL BATTLE";
+  status.textContent = consequenceActive
+    ? "CHOOSE YOUR FATE"
+    : battleActive
+      ? "WAITING FOR YOUR MOVE"
+      : "WAITING FOR FINAL BATTLE";
   status.className = "waiting";
 }
 
 onValue(ref(db, "game/phase"), snapshot => {
 
-  battleActive = snapshot.val() === "battle";
+  const phase = snapshot.val() || "idle";
+  const enteringConsequence =
+    phase === "consequence" && !consequenceActive;
 
-  if (!battleActive) {
+  battleActive = phase === "battle";
+  consequenceActive = phase === "consequence";
+
+  if (enteringConsequence) {
+    resetController();
+    return;
+  }
+
+  if (!battleActive && !consequenceActive) {
 
     buttons.forEach(button => {
       button.disabled = true;
@@ -262,7 +283,12 @@ onValue(ref(db, "game/phase"), snapshot => {
     });
 
     lockButton.disabled = !selectedChoice;
-    status.textContent = "WAITING FOR YOUR MOVE";
+    lockButton.textContent = consequenceActive
+      ? "LOCK MY CHOICE"
+      : "LOCK MY MOVE";
+    status.textContent = consequenceActive
+      ? "CHOOSE YOUR FATE"
+      : "WAITING FOR YOUR MOVE";
     status.className = "waiting";
   }
 });
@@ -270,7 +296,7 @@ onValue(ref(db, "game/phase"), snapshot => {
 buttons.forEach(button => {
   button.addEventListener("click", () => {
 
-    if (!battleActive || locked) return;
+    if ((!battleActive && !consequenceActive) || locked) return;
 
     selectedChoice = button.dataset.choice;
 
@@ -280,8 +306,9 @@ buttons.forEach(button => {
 
     button.classList.add("selected");
 
-    selection.textContent =
-      "SELECTED: " + selectedChoice.toUpperCase();
+    selection.textContent = consequenceActive
+      ? "MYSTERY CHOICE: " + selectedChoice.toUpperCase()
+      : "SELECTED: " + selectedChoice.toUpperCase();
 
     lockButton.disabled = false;
   });
@@ -289,29 +316,85 @@ buttons.forEach(button => {
 
 lockButton.addEventListener("click", async () => {
 
-  if (!battleActive || !selectedChoice || locked) return;
+  if (
+    (!battleActive && !consequenceActive) ||
+    !selectedChoice ||
+    locked
+  ) return;
 
   locked = true;
 
-  await set(
-    ref(db, "game/player1/choice"),
-    selectedChoice
-  );
+  if (consequenceActive) {
+
+    await update(
+      ref(db, "game/consequence"),
+      {
+        choice: selectedChoice,
+        locked: true
+      }
+    );
+
+  } else {
+
+    await set(
+      ref(db, "game/player1/choice"),
+      selectedChoice
+    );
+  }
 
   buttons.forEach(button => {
     button.disabled = true;
   });
 
   lockButton.disabled = true;
-  lockButton.textContent = "MOVE LOCKED ✓";
+  lockButton.textContent = consequenceActive
+    ? "CHOICE LOCKED ✓"
+    : "MOVE LOCKED ✓";
 
-  selection.textContent =
-    "FINAL MOVE: " + selectedChoice.toUpperCase();
+  selection.textContent = consequenceActive
+    ? "FATE CHOSEN: " + selectedChoice.toUpperCase()
+    : "FINAL MOVE: " + selectedChoice.toUpperCase();
 
-  status.textContent =
-    "WAITING FOR PLAYER 2...";
+  status.textContent = consequenceActive
+    ? "FATE SEALED"
+    : "WAITING FOR PLAYER 2...";
 
   status.className = "ready";
+});
+
+onValue(ref(db, "game/consequence"), snapshot => {
+
+  if (!consequenceActive) return;
+
+  const consequenceData = snapshot.val() || {};
+
+  if (consequenceData.locked === true) {
+
+    selectedChoice = consequenceData.choice || null;
+    locked = true;
+
+    buttons.forEach(button => {
+      button.disabled = true;
+      button.classList.toggle(
+        "selected",
+        button.dataset.choice === selectedChoice
+      );
+    });
+
+    lockButton.disabled = true;
+    lockButton.textContent = "CHOICE LOCKED ✓";
+
+    selection.textContent = selectedChoice
+      ? "FATE CHOSEN: " + selectedChoice.toUpperCase()
+      : "FATE CHOSEN";
+
+    status.textContent = "FATE SEALED";
+    status.className = "ready";
+
+  } else if (locked) {
+
+    resetController();
+  }
 });
 
 onValue(ref(db, "game/round"), snapshot => {

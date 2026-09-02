@@ -868,6 +868,105 @@ button:hover {
     animation-duration: .01ms;
   }
 }
+
+/* MATCH OUTCOME SCREENS */
+
+#championVictoryScreen,
+#consequenceScreen,
+#challengeCompleteScreen {
+  width: 100%;
+  min-height: 560px;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.outcome-panel {
+  width: min(820px, 94%);
+  min-height: 420px;
+  padding: 48px 34px;
+  border: 2px solid #c39a4b;
+  background: #fffdf8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 10px 10px 0 rgba(20, 33, 58, .09);
+}
+
+.outcome-title {
+  margin: 0;
+  color: #7a2038;
+  font-size: clamp(31px, 5vw, 54px);
+  letter-spacing: 3px;
+}
+
+.outcome-name {
+  margin-top: 25px;
+  color: #14213a;
+  font-size: clamp(35px, 6vw, 62px);
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.outcome-copy {
+  margin-top: 20px;
+  color: #14213a;
+  font-size: clamp(19px, 3vw, 28px);
+  font-weight: bold;
+  letter-spacing: 3px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.outcome-reward {
+  margin-top: 28px;
+  color: #b58a39;
+  font-size: clamp(22px, 3.5vw, 34px);
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.outcome-support {
+  margin-top: 22px;
+  color: #755e38;
+  font-size: 17px;
+  font-weight: bold;
+  letter-spacing: 4px;
+}
+
+.consequence-symbol {
+  min-height: 96px;
+  margin-top: 20px;
+  font-size: 82px;
+  line-height: 1;
+}
+
+.consequence-order {
+  margin-top: 24px;
+  color: #7a2038;
+  font-size: clamp(18px, 3vw, 27px);
+  font-weight: bold;
+  letter-spacing: 3px;
+  line-height: 1.5;
+}
+
+.challenge-complete-title {
+  margin: 0;
+  color: #7a2038;
+  font-size: clamp(34px, 6vw, 62px);
+  letter-spacing: 3px;
+}
+
+.challenge-complete-copy {
+  margin-top: 26px;
+  color: #b58a39;
+  font-size: 21px;
+  font-weight: bold;
+  letter-spacing: 5px;
+}
 /* HOST CONTROLS */
 
 .host-controls {
@@ -1094,6 +1193,32 @@ button:hover {
 
 </div>
 
+<div id="championVictoryScreen" style="display:none;">
+  <div class="outcome-panel">
+    <h2 class="outcome-title">👑 FINAL BOSS DEFEATED</h2>
+    <div id="victoryChampionName" class="outcome-name">CHAMPION</div>
+    <div class="outcome-copy">HAS DEFEATED<br>THE GAME MASTERS</div>
+    <div class="outcome-reward">BONUS REWARD UNLOCKED 🎁</div>
+    <div class="outcome-support">CLAIM YOUR FINAL REWARD</div>
+  </div>
+</div>
+
+<div id="consequenceScreen" style="display:none;">
+  <div class="outcome-panel">
+    <div id="consequenceSymbol" class="consequence-symbol"></div>
+    <h2 id="consequenceTitle" class="outcome-title"></h2>
+    <div id="consequenceCopy" class="outcome-copy"></div>
+    <div id="consequenceOrder" class="consequence-order"></div>
+  </div>
+</div>
+
+<div id="challengeCompleteScreen" style="display:none;">
+  <div class="outcome-panel">
+    <h2 class="challenge-complete-title">FINAL CHALLENGE COMPLETE ✓</h2>
+    <div class="challenge-complete-copy">MISSION ACCOMPLISHED</div>
+  </div>
+</div>
+
 <div id="battleScreen" style="display:none;">
   
   <div class="brand">
@@ -1280,6 +1405,8 @@ let entrancePlayed = false;
 let initializationPlayed = false;
 let gameMasterRevealPlayed = false;
 let battleIntroPlayed = false;
+let consequenceIntroPlayed = false;
+let currentConsequenceLocked = false;
 let currentPhase = "idle";
 let battleControllersConnected = false;
 let roundRunId = 0;
@@ -1291,6 +1418,16 @@ let roundRunId = 0;
 
 const sleep = ms =>
   new Promise(resolve => setTimeout(resolve, ms));
+
+
+const consequenceA =
+  "[CONSEQUENCE A — TO BE FINALIZED]";
+
+const consequenceB =
+  "[CONSEQUENCE B — TO BE FINALIZED]";
+
+const consequenceC =
+  "[CONSEQUENCE C — TO BE FINALIZED]";
 
 
 function emoji(choice) {
@@ -1336,6 +1473,57 @@ function determineWinner(p1, p2) {
   }
 
   return "player2";
+}
+
+
+function consequenceFor(choice) {
+
+  if (choice === "rock") return consequenceA;
+  if (choice === "paper") return consequenceB;
+  if (choice === "scissors") return consequenceC;
+
+  return "[CONSEQUENCE — TO BE FINALIZED]";
+}
+
+
+function showConsequenceReveal(choice) {
+
+  document.getElementById(
+    "consequenceTitle"
+  ).textContent = "FATE SEALED.";
+
+  document.getElementById(
+    "consequenceSymbol"
+  ).textContent = emoji(choice) + " " + choice.toUpperCase();
+
+  document.getElementById(
+    "consequenceCopy"
+  ).textContent = "GAME MASTER'S ORDERS";
+
+  document.getElementById(
+    "consequenceOrder"
+  ).textContent = consequenceFor(choice);
+}
+
+
+function showDedicatedScreen(screenId) {
+
+  [
+    "joinScreen",
+    "entranceScreen",
+    "registrationScreen",
+    "initializingScreen",
+    "gameMasterRevealScreen",
+    "battleIntroScreen",
+    "battleScreen",
+    "championVictoryScreen",
+    "consequenceScreen",
+    "challengeCompleteScreen"
+  ].forEach(id => {
+    document.getElementById(id).style.display = "none";
+  });
+
+  document.getElementById(screenId).style.display = "flex";
 }
 
 
@@ -1512,7 +1700,7 @@ async function resolveRound(data) {
 
     await sleep(1600);
 
-    showMatchWinner(
+    await showMatchWinner(
       score1,
       score2
     );
@@ -1588,56 +1776,36 @@ async function startNextRound(round) {
    MATCH WINNER
 ---------------------------- */
 
-function showMatchWinner(
+async function showMatchWinner(
   score1,
   score2
 ) {
 
-  const winnerScreen =
-    document.getElementById(
-      "winnerScreen"
-    );
-
-
-  winnerScreen.style.display =
-    "block";
-
-
   if (score1 >= 2) {
 
-    document.getElementById(
-      "winnerTitle"
-    ).textContent =
-      "🏆 FINAL BOSS DEFEATED!";
-
-
-    document.getElementById(
-      "winnerMessage"
-    ).textContent =
-      "THE CHAMPION WINS — BONUS REWARD UNLOCKED!";
+    await update(
+      gameRef,
+      {
+        matchWinner: "champion",
+        phase: "champion-victory"
+      }
+    );
 
   }
 
   else {
 
-    document.getElementById(
-      "winnerTitle"
-    ).textContent =
-      "👑 FINAL BOSS WINS!";
-
-
-    document.getElementById(
-      "winnerMessage"
-    ).textContent =
-      "CONSEQUENCE UNLOCKED!";
+    await update(
+      gameRef,
+      {
+        matchWinner: "game-masters",
+        "consequence/choice": null,
+        "consequence/locked": false,
+        phase: "consequence"
+      }
+    );
 
   }
-
-
-  document.getElementById(
-    "gameStatus"
-  ).textContent =
-    "Battle complete.";
 
 }
 
@@ -1701,6 +1869,23 @@ document.getElementById(
 document.getElementById(
   "battleIntroChampionName"
 ).textContent = championDisplayName;
+
+document.getElementById(
+  "victoryChampionName"
+).textContent = championDisplayName;
+
+if (phase !== "consequence") {
+  consequenceIntroPlayed = false;
+  currentConsequenceLocked = false;
+}
+
+[
+  "championVictoryScreen",
+  "consequenceScreen",
+  "challengeCompleteScreen"
+].forEach(id => {
+  document.getElementById(id).style.display = "none";
+});
 
 
 /* JOIN SCREEN STATUS */
@@ -2404,6 +2589,88 @@ if (phase === "registration") {
     "battleScreen"
   ).style.display = "block";
 
+} else if (phase === "champion-victory") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  showDedicatedScreen("championVictoryScreen");
+
+} else if (phase === "consequence") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  showDedicatedScreen("consequenceScreen");
+
+  currentConsequenceLocked =
+    data.consequence?.locked === true;
+
+  const consequenceChoice =
+    data.consequence?.choice || "";
+
+  if (currentConsequenceLocked && consequenceChoice) {
+
+    showConsequenceReveal(consequenceChoice);
+
+  } else if (!consequenceIntroPlayed) {
+
+    consequenceIntroPlayed = true;
+
+    setTimeout(async () => {
+
+      if (
+        currentPhase !== "consequence" ||
+        currentConsequenceLocked
+      ) return;
+
+      document.getElementById(
+        "consequenceSymbol"
+      ).textContent = "";
+
+      document.getElementById(
+        "consequenceTitle"
+      ).textContent = "🎮 GAME MASTERS WIN";
+
+      document.getElementById(
+        "consequenceCopy"
+      ).textContent = "GAME OVER?\n\n...NOT QUITE.";
+
+      document.getElementById(
+        "consequenceOrder"
+      ).textContent = "";
+
+      await sleep(2600);
+
+      if (
+        currentPhase !== "consequence" ||
+        currentConsequenceLocked
+      ) return;
+
+      document.getElementById(
+        "consequenceTitle"
+      ).textContent = "⚠️ ONE FINAL CHALLENGE REMAINS";
+
+      document.getElementById(
+        "consequenceCopy"
+      ).textContent = "CHAMPION...\n\nCHOOSE YOUR FATE.";
+
+    }, 500);
+  }
+
+} else if (phase === "challenge-complete") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  showDedicatedScreen("challengeCompleteScreen");
+
 } else {
 
   entrancePlayed = false;
@@ -2659,6 +2926,15 @@ document.getElementById(
     gameMasterRevealReady:
       false,
 
+    matchWinner:
+      null,
+
+    "consequence/choice":
+      null,
+
+    "consequence/locked":
+      false,
+
     roundComplete:
       false
 
@@ -2694,6 +2970,9 @@ document.getElementById(
         "champion/registered": false,
         systemOverrideReady: false,
         gameMasterRevealReady: false,
+        matchWinner: null,
+        "consequence/choice": null,
+        "consequence/locked": false,
         roundComplete: false
       }
     );

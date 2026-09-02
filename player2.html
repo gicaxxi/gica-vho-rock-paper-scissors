@@ -64,7 +64,7 @@ h1 {
   opacity: .45;
 }
 
-#startBattleButton {
+#challengeCompleteButton {
   margin-bottom: 30px;
 }
 
@@ -183,6 +183,10 @@ h1 {
     START BATTLE
   </button>
 
+  <button id="challengeCompleteButton" class="admin-button" disabled>
+    CHALLENGE COMPLETE
+  </button>
+
   <div class="instruction">
     Choose your move, then lock it in.
   </div>
@@ -267,6 +271,7 @@ const openRegistrationButton = document.getElementById("openRegistrationButton")
 const initializeBattleButton = document.getElementById("initializeBattleButton");
 const revealGameMastersButton = document.getElementById("revealGameMastersButton");
 const startBattleButton = document.getElementById("startBattleButton");
+const challengeCompleteButton = document.getElementById("challengeCompleteButton");
 const selection = document.getElementById("selection");
 const status = document.getElementById("status");
 
@@ -313,6 +318,18 @@ let adminPhase = "idle";
 let systemOverrideReady = false;
 let gameMasterRevealReady = false;
 let championConnected = false;
+let consequenceLocked = false;
+
+function updateChallengeCompleteControl() {
+
+  challengeCompleteButton.disabled = !(
+    adminPhase === "champion-victory" ||
+    (
+      adminPhase === "consequence" &&
+      consequenceLocked
+    )
+  );
+}
 
 function updateStartBattleControl() {
 
@@ -339,6 +356,7 @@ onValue(ref(db, "game/champion/registered"), snapshot => {
   championRegistered = snapshot.val() === true;
   updateAdminControls();
   updateStartBattleControl();
+  updateChallengeCompleteControl();
 
   if (!championRegistered) {
     initializeBattleButton.textContent = "INITIALIZE FINAL BATTLE";
@@ -383,6 +401,10 @@ onValue(ref(db, "game/phase"), snapshot => {
   if (adminPhase !== "battle-intro") {
     startBattleButton.textContent = "START BATTLE";
   }
+
+  if (adminPhase !== "challenge-complete") {
+    challengeCompleteButton.textContent = "CHALLENGE COMPLETE";
+  }
 });
 
 onValue(ref(db, "game/systemOverrideReady"), snapshot => {
@@ -419,6 +441,12 @@ onValue(ref(db, "game/player1/connected"), snapshot => {
   updateStartBattleControl();
 });
 
+onValue(ref(db, "game/consequence/locked"), snapshot => {
+
+  consequenceLocked = snapshot.val() === true;
+  updateChallengeCompleteControl();
+});
+
 startBattleButton.addEventListener("click", async () => {
 
   const gameRef = ref(db, "game");
@@ -432,7 +460,10 @@ startBattleButton.addEventListener("click", async () => {
       "score/player2": 0,
       "player1/choice": null,
       "player2/choice": null,
-      gameMasterRevealReady: false
+      gameMasterRevealReady: false,
+      matchWinner: null,
+      "consequence/choice": null,
+      "consequence/locked": false
     }
   );
 
@@ -447,6 +478,17 @@ startBattleButton.addEventListener("click", async () => {
   resetController();
 
   startBattleButton.textContent = "BATTLE STARTED ✓";
+});
+
+challengeCompleteButton.addEventListener("click", async () => {
+
+  await set(
+    ref(db, "game/phase"),
+    "challenge-complete"
+  );
+
+  challengeCompleteButton.textContent =
+    "CHALLENGE COMPLETE ✓";
 });
 
 function resetController() {
