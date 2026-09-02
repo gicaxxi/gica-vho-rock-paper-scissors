@@ -64,7 +64,7 @@ h1 {
   opacity: .45;
 }
 
-#challengeCompleteButton {
+#startFinaleButton {
   margin-bottom: 30px;
 }
 
@@ -187,6 +187,10 @@ h1 {
     CHALLENGE COMPLETE
   </button>
 
+  <button id="startFinaleButton" class="admin-button" disabled>
+    START FINALE
+  </button>
+
   <div class="instruction">
     Choose your move, then lock it in.
   </div>
@@ -272,6 +276,7 @@ const initializeBattleButton = document.getElementById("initializeBattleButton")
 const revealGameMastersButton = document.getElementById("revealGameMastersButton");
 const startBattleButton = document.getElementById("startBattleButton");
 const challengeCompleteButton = document.getElementById("challengeCompleteButton");
+const startFinaleButton = document.getElementById("startFinaleButton");
 const selection = document.getElementById("selection");
 const status = document.getElementById("status");
 
@@ -331,6 +336,12 @@ function updateChallengeCompleteControl() {
   );
 }
 
+function updateStartFinaleControl() {
+
+  startFinaleButton.disabled =
+    adminPhase !== "challenge-complete";
+}
+
 function updateStartBattleControl() {
 
   startBattleButton.disabled = !(
@@ -369,6 +380,8 @@ onValue(ref(db, "game/phase"), snapshot => {
   battleActive = adminPhase === "battle";
   updateAdminControls();
   updateStartBattleControl();
+  updateChallengeCompleteControl();
+  updateStartFinaleControl();
 
   if (!battleActive) {
 
@@ -404,6 +417,10 @@ onValue(ref(db, "game/phase"), snapshot => {
 
   if (adminPhase !== "challenge-complete") {
     challengeCompleteButton.textContent = "CHALLENGE COMPLETE";
+  }
+
+  if (adminPhase !== "finale") {
+    startFinaleButton.textContent = "START FINALE";
   }
 });
 
@@ -489,6 +506,20 @@ challengeCompleteButton.addEventListener("click", async () => {
 
   challengeCompleteButton.textContent =
     "CHALLENGE COMPLETE ✓";
+});
+
+startFinaleButton.addEventListener("click", async () => {
+
+  if (adminPhase !== "challenge-complete") return;
+
+  startFinaleButton.disabled = true;
+
+  await set(
+    ref(db, "game/phase"),
+    "finale"
+  );
+
+  startFinaleButton.textContent = "FINALE STARTED ✓";
 });
 
 function resetController() {

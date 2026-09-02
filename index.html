@@ -873,7 +873,8 @@ button:hover {
 
 #championVictoryScreen,
 #consequenceScreen,
-#challengeCompleteScreen {
+#challengeCompleteScreen,
+#finaleScreen {
   width: 100%;
   min-height: 560px;
   display: none;
@@ -966,6 +967,86 @@ button:hover {
   font-size: 21px;
   font-weight: bold;
   letter-spacing: 5px;
+}
+
+/* FINALE */
+
+.finale-panel {
+  width: min(860px, 94%);
+  min-height: 450px;
+  padding: 46px 34px;
+  border: 2px solid #c39a4b;
+  background: #fffdf8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 10px 10px 0 rgba(20, 33, 58, .09);
+}
+
+.finale-kicker {
+  min-height: 28px;
+  color: #b58a39;
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 4px;
+}
+
+.finale-title {
+  margin: 18px 0 0;
+  color: #7a2038;
+  font-size: clamp(31px, 5.5vw, 58px);
+  letter-spacing: 3px;
+  white-space: pre-line;
+}
+
+.finale-copy {
+  min-height: 68px;
+  margin-top: 25px;
+  color: #14213a;
+  font-size: clamp(19px, 3vw, 29px);
+  font-weight: bold;
+  letter-spacing: 3px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.finale-checklist {
+  min-height: 170px;
+  margin-top: 24px;
+  color: #14213a;
+  font-size: clamp(17px, 2.3vw, 23px);
+  font-weight: bold;
+  letter-spacing: 3px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.finale-memory {
+  margin-top: 30px;
+  padding: 15px 28px;
+  border: 2px solid #c39a4b;
+  background: #7a2038;
+  color: #fffdf8;
+  font-size: clamp(21px, 3vw, 31px);
+  font-weight: bold;
+  letter-spacing: 4px;
+}
+
+.finale-shutdown {
+  animation: finaleShutdown .6s steps(3, end);
+}
+
+@keyframes finaleShutdown {
+  0%, 100% { opacity: 1; transform: translateY(0); }
+  35% { opacity: .68; transform: translateY(2px); }
+  70% { opacity: .88; transform: translateY(-1px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .finale-shutdown {
+    animation-duration: .01ms;
+  }
 }
 /* HOST CONTROLS */
 
@@ -1219,6 +1300,16 @@ button:hover {
   </div>
 </div>
 
+<div id="finaleScreen" style="display:none;">
+  <div id="finalePanel" class="finale-panel">
+    <div id="finaleKicker" class="finale-kicker"></div>
+    <h2 id="finaleTitle" class="finale-title"></h2>
+    <div id="finaleCopy" class="finale-copy"></div>
+    <div id="finaleChecklist" class="finale-checklist"></div>
+    <div id="finaleMemory" class="finale-memory" style="display:none;"></div>
+  </div>
+</div>
+
 <div id="battleScreen" style="display:none;">
   
   <div class="brand">
@@ -1406,6 +1497,8 @@ let initializationPlayed = false;
 let gameMasterRevealPlayed = false;
 let battleIntroPlayed = false;
 let consequenceIntroPlayed = false;
+let finalePlayed = false;
+let finaleRunId = 0;
 let currentConsequenceLocked = false;
 let currentPhase = "idle";
 let battleControllersConnected = false;
@@ -1518,12 +1611,110 @@ function showDedicatedScreen(screenId) {
     "battleScreen",
     "championVictoryScreen",
     "consequenceScreen",
-    "challengeCompleteScreen"
+    "challengeCompleteScreen",
+    "finaleScreen"
   ].forEach(id => {
     document.getElementById(id).style.display = "none";
   });
 
   document.getElementById(screenId).style.display = "flex";
+}
+
+
+async function playFinale() {
+
+  const activeFinaleRunId = ++finaleRunId;
+
+  const finaleCanContinue = () =>
+    currentPhase === "finale" &&
+    activeFinaleRunId === finaleRunId;
+
+  const panel = document.getElementById("finalePanel");
+  const kicker = document.getElementById("finaleKicker");
+  const title = document.getElementById("finaleTitle");
+  const copy = document.getElementById("finaleCopy");
+  const checklist = document.getElementById("finaleChecklist");
+  const memory = document.getElementById("finaleMemory");
+
+  panel.className = "finale-panel";
+  kicker.textContent = "";
+  title.textContent = "FINAL MISSION COMPLETE ✓";
+  copy.textContent = "";
+  checklist.textContent = "";
+  memory.style.display = "none";
+  memory.textContent = "";
+
+  await sleep(1700);
+  if (!finaleCanContinue()) return;
+
+  const completedMissions = [
+    "PLAYER KITS ✓",
+    "CHALLENGES ✓",
+    "MISSIONS ✓",
+    "VAULTS ✓",
+    "CHAMPIONS ✓",
+    "FINAL BOSS ✓"
+  ];
+
+  for (const mission of completedMissions) {
+    if (!finaleCanContinue()) return;
+    checklist.textContent +=
+      (checklist.textContent ? "\n" : "") + mission;
+    await sleep(600);
+  }
+
+  if (!finaleCanContinue()) return;
+  title.textContent = "GAME COMPLETE";
+  checklist.textContent = "";
+  await sleep(1800);
+
+  if (!finaleCanContinue()) return;
+  kicker.textContent = "SYSTEM STATUS";
+  title.textContent = "GAME MASTER SESSION ENDING...";
+  await sleep(1400);
+
+  if (!finaleCanContinue()) return;
+  checklist.textContent = "GICA ✓";
+  await sleep(700);
+
+  if (!finaleCanContinue()) return;
+  checklist.textContent += "\nVHO ✓";
+  await sleep(700);
+
+  if (!finaleCanContinue()) return;
+  panel.classList.add("finale-shutdown");
+  title.textContent = "GAME MASTERS SIGNING OFF.";
+  await sleep(1600);
+
+  if (!finaleCanContinue()) return;
+  panel.classList.remove("finale-shutdown");
+  kicker.textContent = "";
+  title.textContent = "WE CREATED THE GAME.";
+  copy.textContent = "YOU MADE IT A CELEBRATION.";
+  checklist.textContent = "";
+  await sleep(2800);
+
+  if (!finaleCanContinue()) return;
+  title.textContent = "AND NOW...";
+  copy.textContent = "OUR NEXT CHAPTER BEGINS.";
+  await sleep(1200);
+
+  if (!finaleCanContinue()) return;
+  kicker.textContent = "NEXT CHAPTER UNLOCKED ✓";
+  title.textContent = "GICA ♥ VHO";
+  copy.textContent = "FROM GAME MASTERS\nTO PARTNERS FOR LIFE.";
+  await sleep(3000);
+
+  if (!finaleCanContinue()) return;
+  kicker.textContent = "";
+  title.textContent = "BEFORE WE BEGIN OUR NEXT CHAPTER...";
+  copy.textContent = "LET'S LOOK BACK AT THE DAY\nTHAT BROUGHT US HERE.";
+  checklist.textContent = "";
+  await sleep(1500);
+
+  if (!finaleCanContinue()) return;
+  memory.textContent = "▶ PLAY MEMORY";
+  memory.style.display = "block";
 }
 
 
@@ -1836,6 +2027,10 @@ const phase =
 
 currentPhase = phase;
 
+if (phase !== "finale") {
+  finaleRunId++;
+}
+
 battleControllersConnected =
   player1Connected && player2Connected;
 
@@ -1883,10 +2078,15 @@ if (phase !== "consequence") {
   currentConsequenceLocked = false;
 }
 
+if (phase === "idle") {
+  finalePlayed = false;
+}
+
 [
   "championVictoryScreen",
   "consequenceScreen",
-  "challengeCompleteScreen"
+  "challengeCompleteScreen",
+  "finaleScreen"
 ].forEach(id => {
   document.getElementById(id).style.display = "none";
 });
@@ -2675,6 +2875,20 @@ if (phase === "registration") {
 
   showDedicatedScreen("challengeCompleteScreen");
 
+} else if (phase === "finale") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  showDedicatedScreen("finaleScreen");
+
+  if (!finalePlayed) {
+    finalePlayed = true;
+    playFinale();
+  }
+
 } else {
 
   entrancePlayed = false;
@@ -2939,6 +3153,9 @@ document.getElementById(
     "consequence/locked":
       false,
 
+    phase:
+      "idle",
+
     roundComplete:
       false
 
@@ -2977,6 +3194,7 @@ document.getElementById(
         matchWinner: null,
         "consequence/choice": null,
         "consequence/locked": false,
+        phase: "idle",
         roundComplete: false
       }
     );
