@@ -12,6 +12,7 @@
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #f7f1e5;
   color: #14213a;
   font-family: Arial, sans-serif;
@@ -27,6 +28,8 @@ body {
   max-width: 480px;
   margin: auto;
   text-align: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .brand {
@@ -56,20 +59,29 @@ h1 {
   margin-bottom: 10px;
 }
 
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(6px, 2vw, 10px);
+}
+
 .choice {
   width: 100%;
-  min-height: 64px;
-  margin-bottom: 10px;
+  min-width: 0;
+  min-height: clamp(72px, 11dvh, 86px);
+  margin: 0;
   border: 2px solid #c39a4b;
   background: #fffdf8;
   color: #14213a;
-  font-size: 20px;
+  padding: 8px 4px;
+  font-size: clamp(14px, 4vw, 17px);
   font-weight: bold;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 4px;
   border-radius: 8px;
   touch-action: manipulation;
 }
@@ -85,7 +97,8 @@ h1 {
 }
 
 .emoji {
-  font-size: 34px;
+  font-size: clamp(30px, 9vw, 36px);
+  line-height: 1;
 }
 
 #selection {
@@ -147,7 +160,23 @@ h1 {
 
 @media (min-width: 600px) {
   body { padding-top: 24px; }
-  .choice { min-height: 72px; }
+  .choice { min-height: 86px; }
+}
+
+@media (max-height: 700px) {
+  body {
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  .brand { margin-top: 0; font-size: 12px; }
+  h1 { margin-top: 4px; font-size: 24px; }
+  .player { margin-bottom: 7px; }
+  #status { min-height: 40px; margin-bottom: 8px; padding: 8px; }
+  .instruction { margin-bottom: 7px; font-size: 13px; }
+  .choice { min-height: 68px; }
+  #selection { margin-top: 8px; }
+  #lockButton { min-height: 52px; margin-top: 6px; }
+  .footer { display: none; }
 }
 </style>
 </head>
@@ -170,6 +199,7 @@ h1 {
     Choose your move, then lock it in.
   </div>
 
+  <div class="choice-grid">
   <button class="choice" data-choice="rock" disabled>
     <span class="emoji">✊</span>
     ROCK
@@ -184,6 +214,7 @@ h1 {
     <span class="emoji">✌️</span>
     SCISSORS
   </button>
+  </div>
 
   <div id="selection">
     NO MOVE SELECTED

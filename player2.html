@@ -12,6 +12,7 @@
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #f7f1e5;
   color: #14213a;
   font-family: Arial, sans-serif;
@@ -51,8 +52,8 @@ h1 {
 }
 
 .control-section {
-  margin-bottom: 18px;
-  padding: 14px;
+  margin-bottom: clamp(8px, 1.5dvh, 14px);
+  padding: clamp(9px, 1.5dvh, 13px);
   border: 1px solid rgba(195, 154, 75, .65);
   background: rgba(255, 253, 248, .7);
   border-radius: 10px;
@@ -90,6 +91,20 @@ h1 {
   opacity: .45;
 }
 
+.choice-grid,
+.recovery-grid {
+  display: grid;
+  gap: clamp(6px, 2vw, 10px);
+}
+
+.choice-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.recovery-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 #startFinaleButton {
   margin-bottom: 0;
 }
@@ -113,18 +128,21 @@ h1 {
 
 .choice {
   width: 100%;
-  min-height: 64px;
-  margin-bottom: 10px;
+  min-width: 0;
+  min-height: clamp(72px, 10dvh, 84px);
+  margin: 0;
   border: 2px solid #c39a4b;
   background: #fffdf8;
   color: #14213a;
-  font-size: 20px;
+  padding: 8px 4px;
+  font-size: clamp(14px, 4vw, 17px);
   font-weight: bold;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 4px;
   border-radius: 8px;
   touch-action: manipulation;
 }
@@ -140,7 +158,8 @@ h1 {
 }
 
 .emoji {
-  font-size: 34px;
+  font-size: clamp(30px, 9vw, 36px);
+  line-height: 1;
 }
 
 #selection {
@@ -205,10 +224,55 @@ h1 {
   background: rgba(122, 32, 56, .04);
 }
 
+.recovery-section .admin-button {
+  min-height: 52px;
+  margin: 0;
+  padding: 9px 6px;
+  font-size: 13px;
+}
+
+@media (max-width: 599px) {
+  #adminControlsTitle { margin-bottom: 8px; }
+
+  #startIntroButton:disabled,
+  #openRegistrationButton:disabled,
+  #initializeBattleButton:disabled,
+  #revealGameMastersButton:disabled,
+  #startBattleButton:disabled,
+  #challengeCompleteButton:disabled,
+  #startFinaleButton:disabled {
+    display: none;
+  }
+
+  .control-section > .admin-button:not(:disabled) {
+    margin-bottom: 0;
+  }
+}
+
 @media (min-width: 600px) {
   body { padding-top: 24px; }
   .control-section { padding: 18px; }
-  .choice { min-height: 72px; }
+  .choice { min-height: 84px; }
+}
+
+@media (max-height: 700px) {
+  body {
+    padding-top: max(7px, env(safe-area-inset-top));
+    padding-bottom: max(7px, env(safe-area-inset-bottom));
+  }
+  .brand { margin-top: 0; font-size: 12px; }
+  h1 { margin-top: 3px; font-size: 23px; }
+  .player { margin-bottom: 7px; font-size: 11px; }
+  .control-section { margin-bottom: 7px; padding: 8px; }
+  .section-title { margin-bottom: 7px; font-size: 11px; }
+  .admin-button { min-height: 50px; padding: 8px 10px; }
+  #status { min-height: 36px; margin-bottom: 6px; padding: 6px; }
+  .instruction { margin-bottom: 6px; font-size: 12px; }
+  .choice { min-height: 64px; }
+  #selection { margin-top: 7px; min-height: 20px; }
+  #lockButton { min-height: 50px; margin-top: 5px; }
+  .recovery-section .admin-button { min-height: 46px; }
+  .footer { display: none; }
 }
 </style>
 </head>
@@ -224,7 +288,7 @@ h1 {
   <div class="player">GICA & VHO</div>
 
   <section class="control-section" aria-labelledby="adminControlsTitle">
-  <h2 id="adminControlsTitle" class="section-title">GAME CONTROL · ADMIN CUES</h2>
+  <h2 id="adminControlsTitle" class="section-title">CURRENT GAME ACTION</h2>
   <button id="startIntroButton" class="admin-button">
     START FINAL BOSS INTRO
   </button>
@@ -265,6 +329,7 @@ h1 {
     Choose your move, then lock it in.
   </div>
 
+  <div class="choice-grid">
   <button class="choice" data-choice="rock" disabled>
     <span class="emoji">✊</span>
     ROCK
@@ -279,6 +344,7 @@ h1 {
     <span class="emoji">✌️</span>
     SCISSORS
   </button>
+  </div>
 
   <div id="selection">
     NO MOVE SELECTED
@@ -292,13 +358,15 @@ h1 {
   <section class="control-section recovery-section" aria-labelledby="recoveryControlsTitle">
   <h2 id="recoveryControlsTitle" class="section-title">GAME RECOVERY</h2>
 
-  <button id="resetRpsMatchButton" class="admin-button" disabled>
-    RESET RPS MATCH
-  </button>
+  <div class="recovery-grid">
+    <button id="resetRpsMatchButton" class="admin-button" disabled>
+      RESET RPS
+    </button>
 
-  <button id="fullResetButton" class="admin-button" disabled>
-    RESET FULL GAME
-  </button>
+    <button id="fullResetButton" class="admin-button" disabled>
+      RESET FULL GAME
+    </button>
+  </div>
   </section>
 
   <div class="footer">
