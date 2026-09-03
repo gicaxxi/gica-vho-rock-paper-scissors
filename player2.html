@@ -91,6 +91,20 @@ h1 {
   opacity: .45;
 }
 
+#startIntroButton:disabled,
+#openRegistrationButton:disabled,
+#initializeBattleButton:disabled,
+#revealGameMastersButton:disabled,
+#startBattleButton:disabled,
+#challengeCompleteButton:disabled,
+#startFinaleButton:disabled {
+  display: none;
+}
+
+.control-section > .admin-button:not(:disabled) {
+  margin-bottom: 0;
+}
+
 .choice-grid,
 .recovery-grid {
   display: grid;
@@ -233,20 +247,6 @@ h1 {
 
 @media (max-width: 599px) {
   #adminControlsTitle { margin-bottom: 8px; }
-
-  #startIntroButton:disabled,
-  #openRegistrationButton:disabled,
-  #initializeBattleButton:disabled,
-  #revealGameMastersButton:disabled,
-  #startBattleButton:disabled,
-  #challengeCompleteButton:disabled,
-  #startFinaleButton:disabled {
-    display: none;
-  }
-
-  .control-section > .admin-button:not(:disabled) {
-    margin-bottom: 0;
-  }
 }
 
 @media (min-width: 600px) {

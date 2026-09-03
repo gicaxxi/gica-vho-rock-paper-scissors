@@ -76,16 +76,17 @@ h1 {
 .score {
   width: min(360px, 44%);
   padding: 10px 17px;
-  border: 0;
+  border: 2px solid #c39a4b;
+  background: rgba(255, 253, 248, .82);
 }
 
 .champion {
-  background: transparent;
+  background: rgba(122, 32, 56, .06);
   color: #7a2038;
 }
 
 .boss {
-  background: transparent;
+  background: rgba(20, 33, 58, .06);
   color: #14213a;
 }
 
@@ -143,9 +144,9 @@ h1 {
   max-width: 440px;
   min-width: 0;
   min-height: 190px;
-  border: 0;
+  border: 2px solid #c39a4b;
   padding: 10px 25px;
-  background: transparent;
+  background: rgba(255, 253, 248, .82);
 }
 
 .player-name {
@@ -1792,9 +1793,6 @@ async function playFinale() {
   title.textContent = "BEFORE WE BEGIN OUR NEXT CHAPTER...";
   copy.textContent = "LET'S LOOK BACK AT THE DAY\nTHAT BROUGHT US HERE.";
   checklist.textContent = "";
-  await sleep(TIMING.finale.memoryHandoff);
-
-  if (!finaleCanContinue()) return;
   memory.textContent = "▶ PLAY MEMORY";
   memory.style.display = "block";
 }
