@@ -36,7 +36,7 @@ body {
 
 .brand {
   color: #7a2038;
-  font-size: 17px;
+  font-size: clamp(22px, 1.8vw, 30px);
   font-weight: bold;
   letter-spacing: 5px;
   margin-bottom: 10px;
@@ -44,12 +44,13 @@ body {
 
 h1 {
   margin: 0;
-  font-size: clamp(35px, 5vw, 60px);
+  font-size: clamp(58px, 6vw, 92px);
   letter-spacing: 2px;
 }
 
 .subtitle {
   color: #b58a39;
+  font-size: clamp(22px, 2.2vw, 34px);
   font-weight: bold;
   letter-spacing: 4px;
   margin: 12px 0 30px;
@@ -82,26 +83,27 @@ h1 {
 
 .score-label {
   color: #e5bd68;
-  font-size: 12px;
+  font-size: clamp(22px, 1.8vw, 28px);
   font-weight: bold;
   letter-spacing: 2px;
 }
 
 .score-number {
-  font-size: 46px;
+  font-size: clamp(52px, 5vw, 72px);
   font-weight: bold;
   margin-top: 4px;
 }
 
 .round {
   color: #7a2038;
+  font-size: clamp(22px, 2vw, 30px);
   font-weight: bold;
   letter-spacing: 3px;
   margin-bottom: 10px;
 }
 
 #message {
-  font-size: 31px;
+  font-size: clamp(32px, 3.5vw, 52px);
   font-weight: bold;
   min-height: 50px;
   margin: 10px 0 25px;
@@ -128,7 +130,7 @@ h1 {
 .player-name {
   color: #7a2038;
   letter-spacing: 2px;
-  font-size: 13px;
+  font-size: clamp(22px, 2vw, 30px);
   font-weight: bold;
 }
 
@@ -138,7 +140,7 @@ h1 {
 }
 
 .choice-name {
-  font-size: 20px;
+  font-size: clamp(22px, 2vw, 30px);
   font-weight: bold;
 }
 
@@ -152,13 +154,14 @@ h1 {
 
 .vs {
   color: #b58a39;
-  font-size: 24px;
+  font-size: clamp(30px, 3vw, 44px);
   font-weight: bold;
 }
 
 #gameStatus {
   margin-top: 25px;
   color: #755e38;
+  font-size: clamp(22px, 2.2vw, 34px);
 }
 
 /* WINNER */
@@ -174,12 +177,12 @@ h1 {
 #winnerTitle {
   margin: 0;
   color: #7a2038;
-  font-size: 38px;
+  font-size: clamp(58px, 6vw, 92px);
 }
 
 #winnerMessage {
   margin-top: 10px;
-  font-size: 20px;
+  font-size: clamp(22px, 2.2vw, 34px);
 }
 
 button {
@@ -242,7 +245,7 @@ button:hover {
 
 .standby-brand {
   color: #7a2038;
-  font-size: clamp(18px, 1.8vw, 30px);
+  font-size: clamp(22px, 1.8vw, 30px);
   font-weight: bold;
   letter-spacing: clamp(6px, .8vw, 12px);
 }
@@ -250,7 +253,7 @@ button:hover {
 .standby-title {
   margin: clamp(24px, 3vh, 38px) 0 0;
   color: #14213a;
-  font-size: clamp(48px, 6vw, 92px);
+  font-size: clamp(58px, 6vw, 92px);
   font-weight: bold;
   line-height: 1;
   letter-spacing: clamp(3px, .5vw, 8px);
@@ -259,7 +262,7 @@ button:hover {
 .standby-ready {
   margin-top: clamp(38px, 6vh, 72px);
   color: #7a2038;
-  font-size: clamp(24px, 3vw, 42px);
+  font-size: clamp(30px, 3vw, 46px);
   font-weight: bold;
   letter-spacing: clamp(4px, .6vw, 9px);
   display: flex;
@@ -283,7 +286,7 @@ button:hover {
 .standby-copy {
   margin-top: clamp(24px, 3.5vh, 40px);
   color: #755e38;
-  font-size: clamp(18px, 1.7vw, 28px);
+  font-size: clamp(22px, 2vw, 30px);
   letter-spacing: clamp(1px, .18vw, 3px);
 }
 
@@ -311,7 +314,7 @@ button:hover {
 }
 
 .intro-panel {
-  width: min(780px, 92%);
+  width: min(980px, 94%);
   min-height: 390px;
   padding: 55px 35px;
   border: 2px solid #c39a4b;
@@ -327,21 +330,21 @@ button:hover {
   min-height: 70px;
   margin-bottom: 10px;
   color: #b58a39;
-  font-size: 58px;
+  font-size: clamp(64px, 7vw, 96px);
   line-height: 1;
 }
 
 .intro-title {
   margin: 0;
   color: #7a2038;
-  font-size: clamp(30px, 5vw, 52px);
+  font-size: clamp(58px, 6vw, 92px);
   letter-spacing: 3px;
 }
 
 .intro-heading {
   margin-top: 20px;
   color: #14213a;
-  font-size: clamp(21px, 3vw, 31px);
+  font-size: clamp(34px, 4vw, 58px);
   font-weight: bold;
   letter-spacing: 3px;
 }
@@ -350,7 +353,7 @@ button:hover {
   min-height: 30px;
   margin-top: 18px;
   color: #755e38;
-  font-size: clamp(17px, 2.2vw, 22px);
+  font-size: clamp(22px, 2.4vw, 36px);
   line-height: 1.5;
 }
 
@@ -358,7 +361,7 @@ button:hover {
   min-height: 55px;
   margin-top: 20px;
   color: #b58a39;
-  font-size: 42px;
+  font-size: clamp(58px, 6vw, 92px);
   font-weight: bold;
   letter-spacing: 8px;
 }
@@ -414,7 +417,7 @@ button:hover {
 }
 
 .registration-panel {
-  width: min(720px, 94%);
+  width: min(880px, 94%);
   padding: 42px 30px;
   border: 2px solid #c39a4b;
   background: #fffdf8;
@@ -424,13 +427,13 @@ button:hover {
 .registration-title {
   margin: 12px 0 6px;
   color: #7a2038;
-  font-size: clamp(32px, 5vw, 52px);
+  font-size: clamp(52px, 5.5vw, 82px);
   letter-spacing: 3px;
 }
 
 .registration-heading {
   color: #14213a;
-  font-size: clamp(21px, 3vw, 29px);
+  font-size: clamp(28px, 3vw, 44px);
   font-weight: bold;
   letter-spacing: 3px;
 }
@@ -452,14 +455,14 @@ button:hover {
 
 .registration-copy {
   color: #755e38;
-  font-size: 18px;
+  font-size: clamp(22px, 2.2vw, 34px);
   line-height: 1.5;
 }
 
 .registered-name {
   margin-top: 28px;
   color: #7a2038;
-  font-size: clamp(34px, 6vw, 58px);
+  font-size: clamp(52px, 6vw, 88px);
   font-weight: bold;
   letter-spacing: 2px;
 }
@@ -467,7 +470,7 @@ button:hover {
 .registered-table {
   margin-top: 12px;
   color: #b58a39;
-  font-size: clamp(23px, 4vw, 34px);
+  font-size: clamp(30px, 4vw, 52px);
   font-weight: bold;
   letter-spacing: 3px;
 }
@@ -475,7 +478,7 @@ button:hover {
 .registered-message {
   margin-top: 24px;
   color: #14213a;
-  font-size: 18px;
+  font-size: clamp(22px, 2.2vw, 34px);
   font-weight: bold;
   letter-spacing: 3px;
 }
@@ -493,7 +496,7 @@ button:hover {
 }
 
 .initializing-panel {
-  width: min(780px, 92%);
+  width: min(940px, 94%);
   min-height: 390px;
   padding: 55px 35px;
   border: 2px solid #c39a4b;
@@ -508,7 +511,7 @@ button:hover {
 .initializing-title {
   margin: 0;
   color: #14213a;
-  font-size: clamp(25px, 4vw, 42px);
+  font-size: clamp(38px, 4.5vw, 66px);
   letter-spacing: 3px;
 }
 
@@ -531,7 +534,7 @@ button:hover {
 .initializing-percent {
   margin-top: 18px;
   color: #7a2038;
-  font-size: 24px;
+  font-size: clamp(30px, 3vw, 44px);
   font-weight: bold;
   letter-spacing: 3px;
 }
@@ -548,7 +551,7 @@ button:hover {
 .override-heading {
   margin-top: 26px;
   color: #14213a;
-  font-size: clamp(19px, 3vw, 28px);
+  font-size: clamp(30px, 3.5vw, 50px);
   font-weight: bold;
   letter-spacing: 3px;
 }
@@ -556,7 +559,7 @@ button:hover {
 .override-access {
   margin-top: 22px;
   color: #b58a39;
-  font-size: clamp(18px, 2.6vw, 25px);
+  font-size: clamp(24px, 2.8vw, 40px);
   font-weight: bold;
   letter-spacing: 3px;
 }
@@ -564,7 +567,7 @@ button:hover {
 .override-verification {
   margin-top: 38px;
   color: #7a2038;
-  font-size: clamp(17px, 2.5vw, 23px);
+  font-size: clamp(26px, 3vw, 44px);
   font-weight: bold;
   letter-spacing: 3px;
 }
@@ -596,7 +599,7 @@ button:hover {
 }
 
 .game-master-panel {
-  width: min(820px, 94%);
+  width: min(980px, 96%);
   min-height: 430px;
   padding: 42px 30px;
   border: 2px solid #7a2038;
@@ -611,7 +614,7 @@ button:hover {
 .game-master-kicker {
   min-height: 26px;
   color: #b58a39;
-  font-size: 15px;
+  font-size: clamp(22px, 2vw, 30px);
   font-weight: bold;
   letter-spacing: 4px;
 }
@@ -619,7 +622,7 @@ button:hover {
 .game-master-title {
   margin: 16px 0 0;
   color: #14213a;
-  font-size: clamp(25px, 4.5vw, 46px);
+  font-size: clamp(34px, 4.5vw, 64px);
   letter-spacing: 3px;
 }
 
@@ -627,7 +630,7 @@ button:hover {
   min-height: 76px;
   margin-top: 18px;
   color: #7a2038;
-  font-size: 68px;
+  font-size: clamp(76px, 8vw, 112px);
   font-weight: bold;
   line-height: 1;
 }
@@ -702,7 +705,7 @@ button:hover {
   min-height: 24px;
   margin-top: 16px;
   color: #7a2038;
-  font-size: 21px;
+  font-size: clamp(24px, 2.4vw, 34px);
   font-weight: bold;
   letter-spacing: 4px;
   visibility: hidden;
@@ -716,7 +719,7 @@ button:hover {
   min-height: 25px;
   margin-top: 24px;
   color: #755e38;
-  font-size: 17px;
+  font-size: clamp(28px, 3vw, 44px);
   font-weight: bold;
   letter-spacing: 3px;
 }
@@ -725,14 +728,14 @@ button:hover {
   min-height: 24px;
   margin-top: 14px;
   color: #b58a39;
-  font-size: 17px;
+  font-size: clamp(22px, 2.2vw, 34px);
   font-weight: bold;
   letter-spacing: 3px;
 }
 
 .game-master-panel.revealed .game-master-title {
   color: #7a2038;
-  font-size: clamp(32px, 5.5vw, 56px);
+  font-size: clamp(58px, 6vw, 92px);
 }
 
 .game-master-glitch {
@@ -789,7 +792,7 @@ button:hover {
 .battle-intro-title {
   margin: 0;
   color: #7a2038;
-  font-size: clamp(31px, 5vw, 54px);
+  font-size: clamp(58px, 6vw, 92px);
   letter-spacing: 3px;
 }
 
@@ -824,7 +827,7 @@ button:hover {
 
 .battle-intro-primary {
   margin-top: 14px;
-  font-size: clamp(18px, 2.2vw, 30px);
+  font-size: clamp(28px, 3vw, 46px);
   line-height: 1.2;
   letter-spacing: clamp(1px, .22vw, 3px);
 }
@@ -840,21 +843,21 @@ button:hover {
 .battle-intro-secondary {
   min-height: 25px;
   margin-top: 9px;
-  font-size: clamp(15px, 1.7vw, 23px);
+  font-size: clamp(24px, 2.2vw, 34px);
   line-height: 1.15;
   letter-spacing: clamp(2px, .3vw, 4px);
 }
 
 .battle-intro-vs {
   color: #b58a39;
-  font-size: 32px;
+  font-size: clamp(38px, 4vw, 58px);
   font-weight: bold;
 }
 
 .battle-intro-rule {
   margin-top: 34px;
   color: #755e38;
-  font-size: 17px;
+  font-size: clamp(22px, 2.2vw, 34px);
   font-weight: bold;
   letter-spacing: 4px;
 }
@@ -863,7 +866,7 @@ button:hover {
   min-height: 64px;
   margin-top: 28px;
   color: #7a2038;
-  font-size: clamp(38px, 6vw, 64px);
+  font-size: clamp(58px, 6vw, 92px);
   font-weight: bold;
   letter-spacing: 5px;
 }
@@ -926,14 +929,14 @@ button:hover {
 .outcome-title {
   margin: 0;
   color: #7a2038;
-  font-size: clamp(31px, 5vw, 54px);
+  font-size: clamp(58px, 6vw, 92px);
   letter-spacing: 3px;
 }
 
 .outcome-name {
   margin-top: 25px;
   color: #14213a;
-  font-size: clamp(35px, 6vw, 62px);
+  font-size: clamp(58px, 6vw, 92px);
   font-weight: bold;
   letter-spacing: 3px;
 }
@@ -941,7 +944,7 @@ button:hover {
 .outcome-copy {
   margin-top: 20px;
   color: #14213a;
-  font-size: clamp(19px, 3vw, 28px);
+  font-size: clamp(28px, 3.2vw, 46px);
   font-weight: bold;
   letter-spacing: 3px;
   line-height: 1.5;
@@ -951,7 +954,7 @@ button:hover {
 .outcome-reward {
   margin-top: 28px;
   color: #b58a39;
-  font-size: clamp(22px, 3.5vw, 34px);
+  font-size: clamp(34px, 4vw, 56px);
   font-weight: bold;
   letter-spacing: 3px;
 }
@@ -959,7 +962,7 @@ button:hover {
 .outcome-support {
   margin-top: 22px;
   color: #755e38;
-  font-size: 17px;
+  font-size: clamp(22px, 2.2vw, 34px);
   font-weight: bold;
   letter-spacing: 4px;
 }
@@ -974,7 +977,7 @@ button:hover {
 .consequence-order {
   margin-top: 24px;
   color: #7a2038;
-  font-size: clamp(18px, 3vw, 27px);
+  font-size: clamp(24px, 2.8vw, 40px);
   font-weight: bold;
   letter-spacing: 3px;
   line-height: 1.5;
@@ -984,14 +987,14 @@ button:hover {
 .challenge-complete-title {
   margin: 0;
   color: #7a2038;
-  font-size: clamp(34px, 6vw, 62px);
+  font-size: clamp(58px, 6vw, 92px);
   letter-spacing: 3px;
 }
 
 .challenge-complete-copy {
   margin-top: 26px;
   color: #b58a39;
-  font-size: 21px;
+  font-size: clamp(24px, 2.6vw, 38px);
   font-weight: bold;
   letter-spacing: 5px;
 }
@@ -1023,7 +1026,7 @@ button:hover {
 .finale-kicker {
   min-height: 28px;
   color: #b58a39;
-  font-size: 15px;
+  font-size: clamp(22px, 2vw, 30px);
   font-weight: bold;
   letter-spacing: 4px;
 }
@@ -1031,7 +1034,7 @@ button:hover {
 .finale-title {
   margin: 18px 0 0;
   color: #7a2038;
-  font-size: clamp(31px, 5.5vw, 58px);
+  font-size: clamp(52px, 6vw, 92px);
   letter-spacing: 3px;
   white-space: pre-line;
 }
@@ -1040,7 +1043,7 @@ button:hover {
   min-height: 68px;
   margin-top: 25px;
   color: #14213a;
-  font-size: clamp(19px, 3vw, 29px);
+  font-size: clamp(28px, 3.2vw, 46px);
   font-weight: bold;
   letter-spacing: 3px;
   line-height: 1.55;
@@ -1051,7 +1054,7 @@ button:hover {
   min-height: 170px;
   margin-top: 24px;
   color: #14213a;
-  font-size: clamp(17px, 2.3vw, 23px);
+  font-size: clamp(24px, 2.6vw, 38px);
   font-weight: bold;
   letter-spacing: 3px;
   line-height: 1.55;
@@ -1064,7 +1067,7 @@ button:hover {
   border: 2px solid #c39a4b;
   background: #7a2038;
   color: #fffdf8;
-  font-size: clamp(21px, 3vw, 31px);
+  font-size: clamp(28px, 3vw, 42px);
   font-weight: bold;
   letter-spacing: 4px;
 }
@@ -1510,53 +1513,53 @@ const sleep = ms =>
 const TIMING = {
   intro: {
     startDelay: 1200,
-    championFound: 4000,
-    interruption: 3000,
-    challengeDetected: 4800
+    championFound: 5000,
+    interruption: 4000,
+    challengeDetected: 6000
   },
   initialization: {
     startDelay: 500,
-    progressSteps: [1050, 1100, 1050, 1100, 1150],
-    overrideHesitation: 2500
+    progressSteps: [1300, 1400, 1400, 1400, 1500],
+    overrideHesitation: 3000
   },
   gameMastersReveal: {
     startDelay: 500,
-    verification: 2500,
-    identifying: 1800,
-    countdownStep: 1000,
-    identitiesRevealed: 2800
+    verification: 3000,
+    identifying: 2500,
+    countdownStep: 1200,
+    identitiesRevealed: 4000
   },
   battleIntro: {
     startDelay: 400,
-    matchup: 4000,
-    ready: 2000,
-    battleStart: 1500
+    matchup: 5000,
+    ready: 2500,
+    battleStart: 2000
   },
   round: {
     bothLocked: 800,
-    countdownStep: 900,
-    shoot: 700,
-    result: 4000,
-    finalResult: 3000,
+    countdownStep: 1000,
+    shoot: 800,
+    result: 4500,
+    finalResult: 4000,
     nextRoundCue: 1000
   },
   consequence: {
     startDelay: 500,
-    gameMastersWin: 4000
+    gameMastersWin: 5000
   },
   finale: {
-    missionComplete: 2500,
-    checklistStep: 900,
-    checklistComplete: 2000,
-    gameComplete: 2800,
-    sessionEnding: 1800,
-    gicaConfirmed: 1000,
-    vhoConfirmed: 1000,
-    signingOff: 2000,
-    emotionalBridge: 4500,
-    nextChapter: 3500,
-    romanticReveal: 5000,
-    memoryHandoff: 5000
+    missionComplete: 3500,
+    checklistStep: 1200,
+    checklistComplete: 2500,
+    gameComplete: 4000,
+    sessionEnding: 2000,
+    gicaConfirmed: 1200,
+    vhoConfirmed: 1200,
+    signingOff: 2600,
+    emotionalBridge: 5500,
+    nextChapter: 5000,
+    romanticReveal: 6000,
+    memoryHandoff: 6000
   }
 };
 
