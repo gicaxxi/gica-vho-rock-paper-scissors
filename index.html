@@ -952,6 +952,7 @@ button:hover {
   font-weight: bold;
   letter-spacing: 3px;
   line-height: 1.5;
+  white-space: pre-line;
 }
 
 .challenge-complete-title {
@@ -1524,13 +1525,13 @@ const sleep = ms =>
 
 
 const consequenceA =
-  "[CONSEQUENCE A — TO BE FINALIZED]";
+  "Give us your best dramatic defeated pose for the camera.";
 
 const consequenceB =
-  "[CONSEQUENCE B — TO BE FINALIZED]";
+  "Give Gica & Vho your best 10-second dance.";
 
 const consequenceC =
-  "[CONSEQUENCE C — TO BE FINALIZED]";
+  "Give Gica & Vho a short message — sweet, funny, or both.";
 
 
 function emoji(choice) {
@@ -1589,6 +1590,16 @@ function consequenceFor(choice) {
 }
 
 
+function consequenceTitleFor(choice) {
+
+  if (choice === "rock") return "01 — POSE DEFEATED";
+  if (choice === "paper") return "02 — DANCE FOR THE COUPLE";
+  if (choice === "scissors") return "03 — MESSAGE FOR THE COUPLE";
+
+  return "CONSEQUENCE";
+}
+
+
 function showConsequenceReveal(choice) {
 
   document.getElementById(
@@ -1605,7 +1616,8 @@ function showConsequenceReveal(choice) {
 
   document.getElementById(
     "consequenceOrder"
-  ).textContent = consequenceFor(choice);
+  ).textContent =
+    consequenceTitleFor(choice) + "\n\n" + consequenceFor(choice);
 }
 
 
