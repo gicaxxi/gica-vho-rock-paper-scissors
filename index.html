@@ -213,98 +213,78 @@ button:hover {
 
 }
 
-/* JOIN SCREEN */
+/* IDLE STANDBY SCREEN */
 
 #joinScreen {
   width: 100%;
+  min-height: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
-#joinScreen h1 {
-  margin: 12px 0 4px;
-  font-size: 48px;
-  color: #14213a;
-}
-
-#joinScreen .subtitle {
-  margin-bottom: 20px;
-}
-
-.join-players {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 35px;
-  width: 100%;
-  margin: 25px auto 0;
-}
-
-.join-card {
-  width: 280px;
-  padding: 20px;
-  border: 1px solid #c39a4b;
+.standby-panel {
+  width: min(760px, 92%);
+  min-height: 390px;
+  padding: 56px 36px;
+  border: 2px solid #c39a4b;
   background: #fffdf8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 10px 10px 0 rgba(20, 33, 58, .08);
 }
 
-.join-role {
+.standby-brand {
   color: #7a2038;
-  font-size: 13px;
+  font-size: 17px;
   font-weight: bold;
-  letter-spacing: 2px;
+  letter-spacing: 6px;
 }
 
-.join-name {
-  margin: 6px 0 14px;
+.standby-title {
+  margin: 22px 0 0;
   color: #14213a;
-  font-size: 18px;
+  font-size: clamp(36px, 6vw, 62px);
   font-weight: bold;
+  letter-spacing: 4px;
 }
 
-.join-qr {
-  width: 170px;
-  height: 170px;
-  margin: 0 auto;
-  padding: 8px;
-  background: white;
-  border: 1px solid #c39a4b;
-}
-
-.join-qr img {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.join-status {
-  margin-top: 14px;
-  color: #8a8a8a;
-  font-size: 13px;
+.standby-mode {
+  margin-top: 18px;
+  color: #b58a39;
+  font-size: clamp(17px, 2.2vw, 23px);
   font-weight: bold;
+  letter-spacing: 5px;
+}
+
+.standby-ready {
+  margin-top: 34px;
+  color: #7a2038;
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  animation: standbyPulse 2.4s ease-in-out infinite;
+}
+
+.standby-copy {
+  margin-top: 20px;
+  color: #755e38;
+  font-size: 17px;
   letter-spacing: 1px;
 }
 
-.join-vs {
-  color: #b58a39;
-  font-size: 28px;
-  font-weight: bold;
+@keyframes standbyPulse {
+  0%, 100% { opacity: .72; }
+  50% { opacity: 1; }
 }
 
-.join-message {
-  margin-top: 24px;
-  color: #755e38;
-  font-size: 13px;
-  font-weight: bold;
-  letter-spacing: 2px;
-}
-
-@media(max-width:750px) {
-
-  .join-players {
-    flex-direction: column;
-    gap: 18px;
+@media (prefers-reduced-motion: reduce) {
+  .standby-ready {
+    animation: none;
   }
-
 }
 
 /* CINEMATIC INTRO SCREEN */
@@ -1083,81 +1063,24 @@ button:hover {
 
 <div id="joinScreen">
 
-  <div class="brand">
-    GICA & VHO
+  <div class="standby-panel">
+    <div class="standby-brand">GICA & VHO</div>
+    <h1 class="standby-title">THE WEDDING GAME</h1>
+    <div class="standby-mode">SYSTEM STANDBY</div>
+    <div class="standby-ready">● READY</div>
+    <div class="standby-copy">Awaiting start command...</div>
   </div>
 
-  <h1>
-    JOIN THE BATTLE
-  </h1>
+</div>
 
-  <div class="subtitle">
-    FINAL BOSS CHALLENGE
-  </div>
-
-  <div class="join-players">
-
-    <div class="join-card">
-
-      <div class="join-role">
-        🏆 CHAMPION
-      </div>
-
-      <div class="join-name">
-        PLAYER
-      </div>
-
-      <div class="join-qr">
-        <img
-          id="championJoinQr"
-          alt="Champion QR Code">
-      </div>
-
-      <div
-        class="join-status"
-        id="joinPlayer1Status">
-        WAITING TO JOIN
-      </div>
-
-    </div>
-
-    <div class="join-vs">
-      VS
-    </div>
-
-    <div class="join-card">
-
-      <div class="join-role">
-        👑 FINAL BOSS
-      </div>
-
-      <div class="join-name">
-        GICA & VHO
-      </div>
-
-      <div class="join-qr">
-        <img
-          id="gameMastersJoinQr"
-          alt="Final Boss QR Code">
-      </div>
-
-      <div
-        class="join-status"
-        id="joinPlayer2Status">
-        WAITING TO JOIN
-      </div>
-
-    </div>
-
-  </div>
-
-  <div
-    class="join-message"
-    id="joinMessage">
-    SCAN YOUR QR CODE TO ENTER THE ARENA
-  </div>
-
-</div>  
+<!-- Retained hidden hooks for existing presence and URL initialization. -->
+<div hidden aria-hidden="true">
+  <img id="championJoinQr" alt="">
+  <img id="gameMastersJoinQr" alt="">
+  <span id="joinPlayer1Status"></span>
+  <span id="joinPlayer2Status"></span>
+  <span id="joinMessage"></span>
+</div>
 
 <div id="entranceScreen" style="display:none;">
 
@@ -1524,6 +1447,61 @@ const sleep = ms =>
   new Promise(resolve => setTimeout(resolve, ms));
 
 
+/* Wedding-rehearsal pacing controls (milliseconds). */
+const TIMING = {
+  intro: {
+    startDelay: 1200,
+    championFound: 4000,
+    interruption: 3000,
+    challengeDetected: 4800
+  },
+  initialization: {
+    startDelay: 500,
+    progressSteps: [1050, 1100, 1050, 1100, 1150],
+    overrideHesitation: 2500
+  },
+  gameMastersReveal: {
+    startDelay: 500,
+    verification: 2500,
+    identifying: 1800,
+    countdownStep: 1000,
+    identitiesRevealed: 2800
+  },
+  battleIntro: {
+    startDelay: 400,
+    matchup: 4000,
+    ready: 2000,
+    battleStart: 1500
+  },
+  round: {
+    bothLocked: 800,
+    countdownStep: 900,
+    shoot: 700,
+    result: 4000,
+    finalResult: 3000,
+    nextRoundCue: 1000
+  },
+  consequence: {
+    startDelay: 500,
+    gameMastersWin: 4000
+  },
+  finale: {
+    missionComplete: 2500,
+    checklistStep: 900,
+    checklistComplete: 2000,
+    gameComplete: 2800,
+    sessionEnding: 1800,
+    gicaConfirmed: 1000,
+    vhoConfirmed: 1000,
+    signingOff: 2000,
+    emotionalBridge: 4500,
+    nextChapter: 3500,
+    romanticReveal: 5000,
+    memoryHandoff: 5000
+  }
+};
+
+
 const consequenceA =
   "Give us your best dramatic defeated pose for the camera.";
 
@@ -1666,7 +1644,7 @@ async function playFinale() {
   memory.style.display = "none";
   memory.textContent = "";
 
-  await sleep(1700);
+  await sleep(TIMING.finale.missionComplete);
   if (!finaleCanContinue()) return;
 
   const completedMissions = [
@@ -1682,31 +1660,34 @@ async function playFinale() {
     if (!finaleCanContinue()) return;
     checklist.textContent +=
       (checklist.textContent ? "\n" : "") + mission;
-    await sleep(600);
+    await sleep(TIMING.finale.checklistStep);
   }
+
+  if (!finaleCanContinue()) return;
+  await sleep(TIMING.finale.checklistComplete);
 
   if (!finaleCanContinue()) return;
   title.textContent = "GAME COMPLETE";
   checklist.textContent = "";
-  await sleep(1800);
+  await sleep(TIMING.finale.gameComplete);
 
   if (!finaleCanContinue()) return;
   kicker.textContent = "SYSTEM STATUS";
   title.textContent = "GAME MASTER SESSION ENDING...";
-  await sleep(1400);
+  await sleep(TIMING.finale.sessionEnding);
 
   if (!finaleCanContinue()) return;
   checklist.textContent = "GICA ✓";
-  await sleep(700);
+  await sleep(TIMING.finale.gicaConfirmed);
 
   if (!finaleCanContinue()) return;
   checklist.textContent += "\nVHO ✓";
-  await sleep(700);
+  await sleep(TIMING.finale.vhoConfirmed);
 
   if (!finaleCanContinue()) return;
   panel.classList.add("finale-shutdown");
   title.textContent = "GAME MASTERS SIGNING OFF.";
-  await sleep(1600);
+  await sleep(TIMING.finale.signingOff);
 
   if (!finaleCanContinue()) return;
   panel.classList.remove("finale-shutdown");
@@ -1714,25 +1695,25 @@ async function playFinale() {
   title.textContent = "WE CREATED THE GAME.";
   copy.textContent = "YOU MADE IT A CELEBRATION.";
   checklist.textContent = "";
-  await sleep(2800);
+  await sleep(TIMING.finale.emotionalBridge);
 
   if (!finaleCanContinue()) return;
   title.textContent = "AND NOW...";
   copy.textContent = "OUR NEXT CHAPTER BEGINS.";
-  await sleep(1200);
+  await sleep(TIMING.finale.nextChapter);
 
   if (!finaleCanContinue()) return;
   kicker.textContent = "NEXT CHAPTER UNLOCKED ✓";
   title.textContent = "GICA ♥ VHO";
   copy.textContent = "FROM GAME MASTERS\nTO PARTNERS FOR LIFE.";
-  await sleep(3000);
+  await sleep(TIMING.finale.romanticReveal);
 
   if (!finaleCanContinue()) return;
   kicker.textContent = "";
   title.textContent = "BEFORE WE BEGIN OUR NEXT CHAPTER...";
   copy.textContent = "LET'S LOOK BACK AT THE DAY\nTHAT BROUGHT US HERE.";
   checklist.textContent = "";
-  await sleep(1500);
+  await sleep(TIMING.finale.memoryHandoff);
 
   if (!finaleCanContinue()) return;
   memory.textContent = "▶ PLAY MEMORY";
@@ -1779,7 +1760,7 @@ async function resolveRound(data) {
     "BOTH MOVES LOCKED ✓";
 
 
-  await sleep(800);
+  await sleep(TIMING.round.bothLocked);
 
   if (!roundCanContinue()) return;
 
@@ -1787,7 +1768,7 @@ async function resolveRound(data) {
   document.getElementById("message")
     .textContent = "3";
 
-  await sleep(700);
+  await sleep(TIMING.round.countdownStep);
 
   if (!roundCanContinue()) return;
 
@@ -1795,7 +1776,7 @@ async function resolveRound(data) {
   document.getElementById("message")
     .textContent = "2";
 
-  await sleep(700);
+  await sleep(TIMING.round.countdownStep);
 
   if (!roundCanContinue()) return;
 
@@ -1803,7 +1784,7 @@ async function resolveRound(data) {
   document.getElementById("message")
     .textContent = "1";
 
-  await sleep(700);
+  await sleep(TIMING.round.countdownStep);
 
   if (!roundCanContinue()) return;
 
@@ -1811,7 +1792,7 @@ async function resolveRound(data) {
   document.getElementById("message")
     .textContent = "SHOOT!";
 
-  await sleep(550);
+  await sleep(TIMING.round.shoot);
 
   if (!roundCanContinue()) return;
 
@@ -1944,7 +1925,7 @@ async function startNextRound(round) {
     "NEXT ROUND";
 
 
-  await sleep(1000);
+  await sleep(TIMING.round.nextRoundCue);
 
 
   try {
@@ -2023,7 +2004,7 @@ async function handleCompletedRound(data) {
   try {
     if (score1 >= 2 || score2 >= 2) {
       document.getElementById("winnerScreen").style.display = "none";
-      await sleep(1600);
+      await sleep(TIMING.round.finalResult);
 
       await runTransaction(gameRef, game => {
         if (
@@ -2048,7 +2029,7 @@ async function handleCompletedRound(data) {
         return game;
       });
     } else {
-      await sleep(3000);
+      await sleep(TIMING.round.result);
       await startNextRound(round);
     }
   } catch (error) {
@@ -2396,7 +2377,7 @@ if (phase === "registration") {
     copy: "You survived the Battle of the Champions."
   });
 
-  await sleep(2800);
+  await sleep(TIMING.intro.championFound);
   await playIntroGlitch();
 
   showIntroScene({
@@ -2405,7 +2386,7 @@ if (phase === "registration") {
     style: "interrupt"
   });
 
-  await sleep(2000);
+  await sleep(TIMING.intro.interruption);
   await playIntroGlitch();
 
   showIntroScene({
@@ -2414,7 +2395,7 @@ if (phase === "registration") {
     suspense: "???"
   });
 
-  await sleep(3500);
+  await sleep(TIMING.intro.challengeDetected);
   await playIntroGlitch();
 
   showIntroScene({
@@ -2425,7 +2406,7 @@ if (phase === "registration") {
     style: "reveal"
   });
 
-}, 1200);
+}, TIMING.intro.startDelay);
     
 }
   
@@ -2514,11 +2495,11 @@ if (phase === "registration") {
       overrideVerification.textContent = "";
 
       const progressSteps = [
-        { value: 25, delay: 700 },
-        { value: 47, delay: 800 },
-        { value: 68, delay: 750 },
-        { value: 82, delay: 850 },
-        { value: 90, delay: 900 }
+        { value: 25, delay: TIMING.initialization.progressSteps[0] },
+        { value: 47, delay: TIMING.initialization.progressSteps[1] },
+        { value: 68, delay: TIMING.initialization.progressSteps[2] },
+        { value: 82, delay: TIMING.initialization.progressSteps[3] },
+        { value: 90, delay: TIMING.initialization.progressSteps[4] }
       ];
 
       for (const step of progressSteps) {
@@ -2531,7 +2512,7 @@ if (phase === "registration") {
         initializingPercent.textContent = step.value + "%";
       }
 
-      await sleep(1800);
+      await sleep(TIMING.initialization.overrideHesitation);
 
       if (currentPhase !== "initializing") return;
 
@@ -2581,7 +2562,7 @@ if (phase === "registration") {
         true
       );
 
-    }, 500);
+    }, TIMING.initialization.startDelay);
   }
 
 } else if (phase === "game-master-reveal") {
@@ -2675,20 +2656,20 @@ if (phase === "registration") {
       gameMasterSupport.textContent = "";
       gameMasterConfirmation.textContent = "";
 
-      await sleep(1800);
+      await sleep(TIMING.gameMastersReveal.verification);
 
       if (currentPhase !== "game-master-reveal") return;
 
       gameMasterTitle.textContent = "IDENTIFYING ADMINISTRATORS...";
 
-      await sleep(900);
+      await sleep(TIMING.gameMastersReveal.identifying);
 
       for (const number of [3, 2, 1]) {
 
         if (currentPhase !== "game-master-reveal") return;
 
         gameMasterCountdown.textContent = number;
-        await sleep(900);
+        await sleep(TIMING.gameMastersReveal.countdownStep);
       }
 
       if (currentPhase !== "game-master-reveal") return;
@@ -2732,7 +2713,7 @@ if (phase === "registration") {
       gicaName.classList.add("revealed");
       vhoName.classList.add("revealed");
 
-      await sleep(1800);
+      await sleep(TIMING.gameMastersReveal.identitiesRevealed);
 
       if (currentPhase !== "game-master-reveal") return;
 
@@ -2747,7 +2728,7 @@ if (phase === "registration") {
         true
       );
 
-    }, 500);
+    }, TIMING.gameMastersReveal.startDelay);
   }
 
 } else if (phase === "battle-intro") {
@@ -2799,20 +2780,20 @@ if (phase === "registration") {
       battleIntroCue.className = "battle-intro-cue";
       battleIntroCue.textContent = "";
 
-      await sleep(2300);
+      await sleep(TIMING.battleIntro.matchup);
 
       if (currentPhase !== "battle-intro") return;
 
       battleIntroCue.textContent = "READY?";
 
-      await sleep(1300);
+      await sleep(TIMING.battleIntro.ready);
 
       if (currentPhase !== "battle-intro") return;
 
       battleIntroCue.className = "battle-intro-cue start";
       battleIntroCue.textContent = "BATTLE START!";
 
-      await sleep(1000);
+      await sleep(TIMING.battleIntro.battleStart);
 
       if (currentPhase !== "battle-intro") return;
 
@@ -2821,7 +2802,7 @@ if (phase === "registration") {
         "battle"
       );
 
-    }, 400);
+    }, TIMING.battleIntro.startDelay);
   }
 
 } else if (phase === "battle") {
@@ -2914,7 +2895,7 @@ if (phase === "registration") {
         "consequenceOrder"
       ).textContent = "";
 
-      await sleep(2600);
+      await sleep(TIMING.consequence.gameMastersWin);
 
       if (
         currentPhase !== "consequence" ||
@@ -2929,7 +2910,7 @@ if (phase === "registration") {
         "consequenceCopy"
       ).textContent = "CHAMPION...\n\nCHOOSE YOUR FATE.";
 
-    }, 500);
+    }, TIMING.consequence.startDelay);
   }
 
 } else if (phase === "challenge-complete") {
