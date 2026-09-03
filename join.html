@@ -201,6 +201,7 @@ from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getDatabase,
   ref,
+  get,
   onValue,
   runTransaction
 }
@@ -276,15 +277,25 @@ championForm.addEventListener("submit", async event => {
 
   try {
 
-    const result = await runTransaction(ref(db, "game"), game => {
+    const gameRef = ref(db, "game");
+    const authoritativeSnapshot = await get(gameRef);
+    const authoritativeGame = authoritativeSnapshot.val();
+
+    if (!authoritativeGame) {
+      throw new Error("Authoritative game state is unavailable.");
+    }
+
+    const result = await runTransaction(gameRef, game => {
+      const currentGame =
+        game || structuredClone(authoritativeGame);
+
       if (
-        !game ||
-        game.phase !== "registration" ||
-        game.champion?.registered === true
+        currentGame.phase !== "registration" ||
+        currentGame.champion?.registered === true
       ) return;
 
-      game.champion = { name, table, registered: true };
-      return game;
+      currentGame.champion = { name, table, registered: true };
+      return currentGame;
     });
 
     if (!result.committed) {
