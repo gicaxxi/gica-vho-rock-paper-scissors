@@ -156,6 +156,25 @@ h1 {
   font-weight: bold;
 }
 
+.player-icon {
+  line-height: 1;
+}
+
+.player-primary {
+  margin-top: 4px;
+}
+
+.player-secondary {
+  min-height: 1.2em;
+  margin-top: 2px;
+  font-size: .78em;
+  line-height: 1.2;
+}
+
+.player-secondary.placeholder {
+  visibility: hidden;
+}
+
 .choice {
   font-size: 85px;
   margin: 10px 0 6px;
@@ -1374,7 +1393,12 @@ button:hover {
     <div class="player-card">
 
       <div class="player-name">
-        🏆 <span id="battleChampionName">CHAMPION</span>
+        <div class="player-icon">🏆</div>
+        <div class="player-primary">
+          <span id="battleChampionName">CHAMPION</span>
+        </div>
+        <div class="player-secondary placeholder"
+             aria-hidden="true">GICA &amp; VHO</div>
       </div>
 
       <div class="choice" id="player1Choice">
@@ -1397,7 +1421,9 @@ button:hover {
     <div class="player-card">
 
       <div class="player-name">
-        🎮 THE GAME MASTERS<br>GICA & VHO
+        <div class="player-icon">🎮</div>
+        <div class="player-primary">THE GAME MASTERS</div>
+        <div class="player-secondary">GICA &amp; VHO</div>
       </div>
 
       <div class="choice" id="player2Choice">
