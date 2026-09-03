@@ -1108,7 +1108,7 @@ button:hover {
 
       <div class="join-qr">
         <img
-          src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https%3A%2F%2Fgicaxxi.github.io%2Fgica-vho-rock-paper-scissors%2Fplayer1.html"
+          id="championJoinQr"
           alt="Champion QR Code">
       </div>
 
@@ -1136,7 +1136,7 @@ button:hover {
 
       <div class="join-qr">
         <img
-          src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https%3A%2F%2Fgicaxxi.github.io%2Fgica-vho-rock-paper-scissors%2Fplayer2.html"
+          id="gameMastersJoinQr"
           alt="Final Boss QR Code">
       </div>
 
@@ -1449,7 +1449,9 @@ import {
   ref,
   onValue,
   set,
-  update
+  update,
+  runTransaction,
+  increment
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
@@ -1480,11 +1482,16 @@ const firebaseConfig = {
 };
 
 
-const app =
-initializeApp(firebaseConfig);
+let app;
+let db;
 
-const db =
-getDatabase(app);
+try {
+  app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+} catch (error) {
+  console.error("Firebase initialization failed on TV:", error);
+  throw error;
+}
 
 const gameRef =
 ref(db, "game");
@@ -1503,6 +1510,9 @@ let currentConsequenceLocked = false;
 let currentPhase = "idle";
 let battleControllersConnected = false;
 let roundRunId = 0;
+let completedRoundHandling = false;
+let resetInProgress = false;
+let currentResetVersion = null;
 
 
 /* ---------------------------
@@ -1824,17 +1834,7 @@ async function resolveRound(data) {
     determineWinner(p1, p2);
 
 
-  let score1 =
-    data.score?.player1 || 0;
-
-  let score2 =
-    data.score?.player2 || 0;
-
-
   if (result === "player1") {
-
-    score1++;
-
     document.getElementById(
       "message"
     ).textContent =
@@ -1844,9 +1844,6 @@ async function resolveRound(data) {
   }
 
   else if (result === "player2") {
-
-    score2++;
-
     document.getElementById(
       "message"
     ).textContent =
@@ -1865,53 +1862,52 @@ async function resolveRound(data) {
   }
 
 
-  await update(
-    gameRef,
-    {
+  const expectedRound = data.round || 1;
+  const expectedResetVersion = data.resetVersion || 0;
 
-      "score/player1":
-        score1,
+  try {
+    const claim = await runTransaction(gameRef, game => {
+      if (
+        !game ||
+        game.phase !== "battle" ||
+        game.roundComplete === true ||
+        (game.round || 1) !== expectedRound ||
+        (game.resetVersion || 0) !== expectedResetVersion ||
+        game.player1?.choice !== p1 ||
+        game.player2?.choice !== p2 ||
+        game.matchWinner ||
+        (game.score?.player1 || 0) >= 2 ||
+        (game.score?.player2 || 0) >= 2
+      ) return;
 
-      "score/player2":
-        score2,
+      game.score ||= {};
+      game.score.player1 ||= 0;
+      game.score.player2 ||= 0;
 
-      roundComplete:
-        true
+      if (result === "player1") game.score.player1++;
+      if (result === "player2") game.score.player2++;
 
+      game.roundComplete = true;
+      game.roundResolution = {
+        round: expectedRound,
+        result,
+        player1Choice: p1,
+        player2Choice: p2
+      };
+
+      return game;
+    });
+
+    if (!claim.committed) {
+      resolving = false;
+      return;
     }
-  );
 
-
-  /* MATCH WINNER */
-
-  if (
-    score1 >= 2 ||
-    score2 >= 2
-  ) {
-
-    document.getElementById(
-      "winnerScreen"
-    ).style.display = "none";
-
-    await sleep(1600);
-
-    await showMatchWinner(
-      score1,
-      score2
-    );
-
-    return;
-
+    await handleCompletedRound(claim.snapshot.val());
+  } catch (error) {
+    resolving = false;
+    console.error("Round-resolution transaction failed:", error);
   }
-
-
-  /* AUTOMATIC NEXT ROUND */
-
-  await sleep(3000);
-
-  await startNextRound(
-    data.round || 1
-  );
 
 }
 
@@ -1939,24 +1935,31 @@ async function startNextRound(round) {
   await sleep(1000);
 
 
-  await update(
-    gameRef,
-    {
+  try {
+    await runTransaction(gameRef, game => {
+      if (
+        !game ||
+        game.phase !== "battle" ||
+        game.matchWinner ||
+        game.roundComplete !== true ||
+        game.roundResolution?.round !== round ||
+        (game.round || 1) !== round ||
+        (game.score?.player1 || 0) >= 2 ||
+        (game.score?.player2 || 0) >= 2
+      ) return;
 
-      round:
-        round + 1,
-
-      "player1/choice":
-        null,
-
-      "player2/choice":
-        null,
-
-      roundComplete:
-        false
-
-    }
-  );
+      game.round = round + 1;
+      game.player1 ||= {};
+      game.player2 ||= {};
+      game.player1.choice = null;
+      game.player2.choice = null;
+      game.roundComplete = false;
+      game.roundResolution = null;
+      return game;
+    });
+  } catch (error) {
+    console.error("Next-round transaction failed:", error);
+  }
 
 
   resolving = false;
@@ -1971,37 +1974,76 @@ async function startNextRound(round) {
    MATCH WINNER
 ---------------------------- */
 
-async function showMatchWinner(
-  score1,
-  score2
-) {
+async function handleCompletedRound(data) {
 
-  if (score1 >= 2) {
+  if (completedRoundHandling) return;
 
-    await update(
-      gameRef,
-      {
-        matchWinner: "champion",
-        phase: "champion-victory"
-      }
-    );
+  const resolution = data.roundResolution;
+  const round = data.round || 1;
 
+  if (!resolution || resolution.round !== round) return;
+
+  completedRoundHandling = true;
+  resolving = true;
+
+  const score1 = data.score?.player1 || 0;
+  const score2 = data.score?.player2 || 0;
+
+  document.getElementById("player1Choice").textContent =
+    emoji(resolution.player1Choice);
+  document.getElementById("player2Choice").textContent =
+    emoji(resolution.player2Choice);
+  document.getElementById("player1Status").textContent =
+    resolution.player1Choice?.toUpperCase() || "LOCKED";
+  document.getElementById("player2Status").textContent =
+    resolution.player2Choice?.toUpperCase() || "LOCKED";
+
+  const championName =
+    data.champion?.name?.trim().toUpperCase() || "CHAMPION";
+
+  document.getElementById("message").textContent =
+    resolution.result === "player1"
+      ? "ROUND " + round + " WINNER\n" + championName
+      : resolution.result === "player2"
+        ? "ROUND " + round + " WINNER\nTHE GAME MASTERS"
+        : "ROUND " + round + "\nDRAW";
+
+  try {
+    if (score1 >= 2 || score2 >= 2) {
+      document.getElementById("winnerScreen").style.display = "none";
+      await sleep(1600);
+
+      await runTransaction(gameRef, game => {
+        if (
+          !game ||
+          game.phase !== "battle" ||
+          game.roundComplete !== true ||
+          game.roundResolution?.round !== round ||
+          game.matchWinner
+        ) return;
+
+        if ((game.score?.player1 || 0) >= 2) {
+          game.matchWinner = "champion";
+          game.phase = "champion-victory";
+        } else if ((game.score?.player2 || 0) >= 2) {
+          game.matchWinner = "game-masters";
+          game.consequence = { choice: null, locked: false };
+          game.phase = "consequence";
+        } else {
+          return;
+        }
+
+        return game;
+      });
+    } else {
+      await sleep(3000);
+      await startNextRound(round);
+    }
+  } catch (error) {
+    console.error("Completed-round transition failed:", error);
+  } finally {
+    completedRoundHandling = false;
   }
-
-  else {
-
-    await update(
-      gameRef,
-      {
-        matchWinner: "game-masters",
-        "consequence/choice": null,
-        "consequence/locked": false,
-        phase: "consequence"
-      }
-    );
-
-  }
-
 }
 
 
@@ -2026,6 +2068,18 @@ const phase =
   data.phase || "idle";
 
 currentPhase = phase;
+
+const resetVersion = data.resetVersion || 0;
+
+if (currentResetVersion === null) {
+  currentResetVersion = resetVersion;
+} else if (resetVersion !== currentResetVersion) {
+  currentResetVersion = resetVersion;
+  roundRunId++;
+  resolving = false;
+  roundTransitionRunning = false;
+  completedRoundHandling = false;
+}
 
 if (phase !== "finale") {
   finaleRunId++;
@@ -3087,6 +3141,8 @@ if (phase === "battle") {
   }
 }
 
+  } else if (phase === "battle") {
+    handleCompletedRound(data);
   }
 
 });
@@ -3103,6 +3159,11 @@ document.getElementById(
   "click",
   async () => {
 
+    if (resetInProgress) return;
+    resetInProgress = true;
+    document.getElementById("newGameButton").disabled = true;
+    document.getElementById("resetGameButton").disabled = true;
+
 
     resolving = false;
 
@@ -3111,7 +3172,8 @@ document.getElementById(
 
     entrancePlayed = false;
 
-    await update(
+    try {
+      await update(
   gameRef,
   {
 
@@ -3157,10 +3219,23 @@ document.getElementById(
       "idle",
 
     roundComplete:
-      false
+      false,
+
+    roundResolution:
+      null,
+
+    resetVersion:
+      increment(1)
 
   }
-);
+      );
+    } catch (error) {
+      console.error("New Game reset write failed:", error);
+    } finally {
+      resetInProgress = false;
+      document.getElementById("newGameButton").disabled = false;
+      document.getElementById("resetGameButton").disabled = false;
+    }
 
   }
 );
@@ -3172,13 +3247,19 @@ document.getElementById(
   "click",
   async () => {
 
+    if (resetInProgress) return;
+    resetInProgress = true;
+    document.getElementById("newGameButton").disabled = true;
+    document.getElementById("resetGameButton").disabled = true;
+
     resolving = false;
     
     roundTransitionRunning = false;
     
     entrancePlayed = false;
     
-    await update(
+    try {
+      await update(
       gameRef,
       {
         round: 1,
@@ -3195,9 +3276,22 @@ document.getElementById(
         "consequence/choice": null,
         "consequence/locked": false,
         phase: "idle",
-        roundComplete: false
+        roundComplete: false,
+        roundResolution: null,
+        resetVersion: increment(1)
       }
-    );
+      );
+    } catch (error) {
+      console.error("Reset Game write failed:", error);
+      resetInProgress = false;
+      document.getElementById("newGameButton").disabled = false;
+      document.getElementById("resetGameButton").disabled = false;
+      return;
+    }
+
+    resetInProgress = false;
+    document.getElementById("newGameButton").disabled = false;
+    document.getElementById("resetGameButton").disabled = false;
 
     document.getElementById(
       "winnerScreen"
@@ -3221,6 +3315,21 @@ document.getElementById(
 
 const registrationUrl =
   new URL("join.html", window.location.href).href;
+
+const championControllerUrl =
+  new URL("player1.html", window.location.href).href;
+
+const gameMastersControllerUrl =
+  new URL("player2.html", window.location.href).href;
+
+const qrBaseUrl =
+  "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=";
+
+document.getElementById("championJoinQr").src =
+  qrBaseUrl + encodeURIComponent(championControllerUrl);
+
+document.getElementById("gameMastersJoinQr").src =
+  qrBaseUrl + encodeURIComponent(gameMastersControllerUrl);
 
 document.getElementById(
   "registrationQr"

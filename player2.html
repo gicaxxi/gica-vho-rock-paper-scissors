@@ -68,6 +68,17 @@ h1 {
   margin-bottom: 30px;
 }
 
+#resetRpsMatchButton {
+  background: #14213a;
+}
+
+#fullResetButton {
+  border-color: #7a2038;
+  background: #fffdf8;
+  color: #7a2038;
+  margin-bottom: 30px;
+}
+
 .instruction {
   font-size: 19px;
   font-weight: bold;
@@ -191,6 +202,14 @@ h1 {
     START FINALE
   </button>
 
+  <button id="resetRpsMatchButton" class="admin-button" disabled>
+    RESET RPS MATCH
+  </button>
+
+  <button id="fullResetButton" class="admin-button" disabled>
+    RESET FULL GAME
+  </button>
+
   <div class="instruction">
     Choose your move, then lock it in.
   </div>
@@ -237,9 +256,9 @@ import {
   getDatabase,
   ref,
   set,
-  update,
   onValue,
-  onDisconnect
+  onDisconnect,
+  runTransaction
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 const firebaseConfig = {
@@ -252,21 +271,33 @@ const firebaseConfig = {
   appId: "1:544288400742:web:c26d421bb4486a4e1814a7"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+let app;
+let db;
+
+try {
+  app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+} catch (error) {
+  console.error("Firebase initialization failed on Admin controller:", error);
+  throw error;
+}
 
 const playerConnectionRef =
   ref(db, "game/player2/connected");
 
-set(playerConnectionRef, true);
-
 onDisconnect(playerConnectionRef)
-  .set(false);
+  .set(false)
+  .then(() => set(playerConnectionRef, true))
+  .catch(error => {
+    console.error("Game Masters presence initialization failed:", error);
+  });
 let currentRound = null;
+let currentResetVersion = null;
   
 let selectedChoice = null;
 let locked = false;
 let battleActive = false;
+let savedBattleChoice = null;
 
 const buttons = document.querySelectorAll(".choice");
 const lockButton = document.getElementById("lockButton");
@@ -277,45 +308,79 @@ const revealGameMastersButton = document.getElementById("revealGameMastersButton
 const startBattleButton = document.getElementById("startBattleButton");
 const challengeCompleteButton = document.getElementById("challengeCompleteButton");
 const startFinaleButton = document.getElementById("startFinaleButton");
+const resetRpsMatchButton = document.getElementById("resetRpsMatchButton");
+const fullResetButton = document.getElementById("fullResetButton");
 const selection = document.getElementById("selection");
 const status = document.getElementById("status");
+const pendingAdminCues = new Set();
+let adminStateLoaded = false;
+
+async function runAdminCue(button, cueName, mutate) {
+  if (pendingAdminCues.has(cueName)) return false;
+
+  pendingAdminCues.add(cueName);
+  button.disabled = true;
+
+  try {
+    const result = await runTransaction(ref(db, "game"), game => {
+      if (!game) return;
+      return mutate(game);
+    });
+    if (result.committed) {
+      adminPhase = result.snapshot.val()?.phase || "idle";
+    }
+    return result.committed;
+  } catch (error) {
+    console.error("Failed Admin phase write (" + cueName + "):", error);
+    return false;
+  } finally {
+    pendingAdminCues.delete(cueName);
+    updateAdminControls();
+    updateStartBattleControl();
+    updateChallengeCompleteControl();
+    updateStartFinaleControl();
+    updateRecoveryControls();
+  }
+}
 
 startIntroButton.addEventListener("click", async () => {
-
-  await set(
-    ref(db, "game/phase"),
-    "intro"
+  const committed = await runAdminCue(
+    startIntroButton,
+    "START FINAL BOSS INTRO",
+    game => {
+      if ((game.phase || "idle") !== "idle") return;
+      game.phase = "intro";
+      return game;
+    }
   );
-
-  startIntroButton.textContent =
-    "INTRO STARTED ✓";
+  if (committed) startIntroButton.textContent = "INTRO STARTED ✓";
 });
 
 openRegistrationButton.addEventListener("click", async () => {
-
-  await set(
-    ref(db, "game/phase"),
-    "registration"
+  const committed = await runAdminCue(
+    openRegistrationButton,
+    "OPEN CHAMPION REGISTRATION",
+    game => {
+      if (game.phase !== "intro") return;
+      game.phase = "registration";
+      return game;
+    }
   );
-
-  openRegistrationButton.textContent =
-    "REGISTRATION OPEN ✓";
+  if (committed) openRegistrationButton.textContent = "REGISTRATION OPEN ✓";
 });
 
 initializeBattleButton.addEventListener("click", async () => {
-
-  await set(
-    ref(db, "game/systemOverrideReady"),
-    false
+  const committed = await runAdminCue(
+    initializeBattleButton,
+    "INITIALIZE FINAL BATTLE",
+    game => {
+      if (game.phase !== "registration" || game.champion?.registered !== true) return;
+      game.systemOverrideReady = false;
+      game.phase = "initializing";
+      return game;
+    }
   );
-
-  await set(
-    ref(db, "game/phase"),
-    "initializing"
-  );
-
-  initializeBattleButton.textContent =
-    "FINAL BATTLE INITIALIZING ✓";
+  if (committed) initializeBattleButton.textContent = "FINAL BATTLE INITIALIZING ✓";
 });
 
 let championRegistered = false;
@@ -333,13 +398,14 @@ function updateChallengeCompleteControl() {
       adminPhase === "consequence" &&
       consequenceLocked
     )
-  );
+  ) || pendingAdminCues.has("CHALLENGE COMPLETE");
 }
 
 function updateStartFinaleControl() {
 
   startFinaleButton.disabled =
-    adminPhase !== "challenge-complete";
+    adminPhase !== "challenge-complete" ||
+    pendingAdminCues.has("START FINALE");
 }
 
 function updateStartBattleControl() {
@@ -349,17 +415,45 @@ function updateStartBattleControl() {
     gameMasterRevealReady &&
     championRegistered &&
     championConnected
-  );
+  ) || pendingAdminCues.has("START BATTLE");
+}
+
+function updateRecoveryControls() {
+  const restartablePhases = new Set([
+    "initializing",
+    "game-master-reveal",
+    "battle-intro",
+    "battle",
+    "champion-victory",
+    "consequence",
+    "challenge-complete",
+    "finale"
+  ]);
+
+  resetRpsMatchButton.disabled = !(
+    adminStateLoaded &&
+    championRegistered &&
+    restartablePhases.has(adminPhase)
+  ) || pendingAdminCues.has("RESET RPS MATCH");
+
+  fullResetButton.disabled =
+    !adminStateLoaded ||
+    pendingAdminCues.has("RESET FULL GAME");
 }
 
 function updateAdminControls() {
-
-  initializeBattleButton.disabled = !championRegistered;
+  startIntroButton.disabled =
+    adminPhase !== "idle" || pendingAdminCues.has("START FINAL BOSS INTRO");
+  openRegistrationButton.disabled =
+    adminPhase !== "intro" || pendingAdminCues.has("OPEN CHAMPION REGISTRATION");
+  initializeBattleButton.disabled = !(
+    adminPhase === "registration" && championRegistered
+  ) || pendingAdminCues.has("INITIALIZE FINAL BATTLE");
 
   revealGameMastersButton.disabled = !(
     adminPhase === "initializing" &&
     systemOverrideReady
-  );
+  ) || pendingAdminCues.has("REVEAL GAME MASTERS");
 }
 
 onValue(ref(db, "game/champion/registered"), snapshot => {
@@ -368,6 +462,7 @@ onValue(ref(db, "game/champion/registered"), snapshot => {
   updateAdminControls();
   updateStartBattleControl();
   updateChallengeCompleteControl();
+  updateRecoveryControls();
 
   if (!championRegistered) {
     initializeBattleButton.textContent = "INITIALIZE FINAL BATTLE";
@@ -377,11 +472,15 @@ onValue(ref(db, "game/champion/registered"), snapshot => {
 onValue(ref(db, "game/phase"), snapshot => {
 
   adminPhase = snapshot.val() || "idle";
+  adminStateLoaded = true;
   battleActive = adminPhase === "battle";
   updateAdminControls();
   updateStartBattleControl();
   updateChallengeCompleteControl();
   updateStartFinaleControl();
+  updateRecoveryControls();
+
+  if (battleActive && restoreBattleChoice()) return;
 
   if (!battleActive) {
 
@@ -431,19 +530,17 @@ onValue(ref(db, "game/systemOverrideReady"), snapshot => {
 });
 
 revealGameMastersButton.addEventListener("click", async () => {
-
-  await set(
-    ref(db, "game/gameMasterRevealReady"),
-    false
+  const committed = await runAdminCue(
+    revealGameMastersButton,
+    "REVEAL GAME MASTERS",
+    game => {
+      if (game.phase !== "initializing" || game.systemOverrideReady !== true) return;
+      game.gameMasterRevealReady = false;
+      game.phase = "game-master-reveal";
+      return game;
+    }
   );
-
-  await set(
-    ref(db, "game/phase"),
-    "game-master-reveal"
-  );
-
-  revealGameMastersButton.textContent =
-    "GAME MASTERS REVEALED ✓";
+  if (committed) revealGameMastersButton.textContent = "GAME MASTERS REVEALED ✓";
 });
 
 onValue(ref(db, "game/gameMasterRevealReady"), snapshot => {
@@ -465,66 +562,155 @@ onValue(ref(db, "game/consequence/locked"), snapshot => {
 });
 
 startBattleButton.addEventListener("click", async () => {
+  const committed = await runAdminCue(
+    startBattleButton,
+    "START BATTLE",
+    game => {
+      if (
+        game.phase !== "game-master-reveal" ||
+        game.gameMasterRevealReady !== true ||
+        game.champion?.registered !== true ||
+        game.player1?.connected !== true
+      ) return;
 
-  const gameRef = ref(db, "game");
-
-  await update(
-    gameRef,
-    {
-      round: 0,
-      roundComplete: false,
-      "score/player1": 0,
-      "score/player2": 0,
-      "player1/choice": null,
-      "player2/choice": null,
-      gameMasterRevealReady: false,
-      matchWinner: null,
-      "consequence/choice": null,
-      "consequence/locked": false
+      game.round = 1;
+      game.roundComplete = false;
+      game.roundResolution = null;
+      game.score = { player1: 0, player2: 0 };
+      game.player1 ||= {};
+      game.player1.choice = null;
+      game.player2 ||= {};
+      game.player2.choice = null;
+      game.gameMasterRevealReady = false;
+      game.matchWinner = null;
+      game.consequence = { choice: null, locked: false };
+      game.phase = "battle-intro";
+      return game;
     }
   );
 
-  await update(
-    gameRef,
-    {
-      round: 1,
-      phase: "battle-intro"
-    }
-  );
-
-  resetController();
-
-  startBattleButton.textContent = "BATTLE STARTED ✓";
+  if (committed) {
+    resetController();
+    startBattleButton.textContent = "BATTLE STARTED ✓";
+  }
 });
 
 challengeCompleteButton.addEventListener("click", async () => {
-
-  await set(
-    ref(db, "game/phase"),
-    "challenge-complete"
+  const committed = await runAdminCue(
+    challengeCompleteButton,
+    "CHALLENGE COMPLETE",
+    game => {
+      const championDone = game.phase === "champion-victory";
+      const consequenceDone =
+        game.phase === "consequence" && game.consequence?.locked === true;
+      if (!championDone && !consequenceDone) return;
+      game.phase = "challenge-complete";
+      return game;
+    }
   );
-
-  challengeCompleteButton.textContent =
-    "CHALLENGE COMPLETE ✓";
+  if (committed) challengeCompleteButton.textContent = "CHALLENGE COMPLETE ✓";
 });
 
 startFinaleButton.addEventListener("click", async () => {
+  const committed = await runAdminCue(
+    startFinaleButton,
+    "START FINALE",
+    game => {
+      if (game.phase !== "challenge-complete") return;
+      game.phase = "finale";
+      return game;
+    }
+  );
+  if (committed) startFinaleButton.textContent = "FINALE STARTED ✓";
+});
 
-  if (adminPhase !== "challenge-complete") return;
-
-  startFinaleButton.disabled = true;
-
-  await set(
-    ref(db, "game/phase"),
-    "finale"
+resetRpsMatchButton.addEventListener("click", async () => {
+  const confirmed = window.confirm(
+    "Reset the RPS match?\n\n" +
+    "Scores and current moves will be cleared.\n" +
+    "Champion registration will be preserved."
   );
 
-  startFinaleButton.textContent = "FINALE STARTED ✓";
+  if (!confirmed) return;
+
+  const committed = await runAdminCue(
+    resetRpsMatchButton,
+    "RESET RPS MATCH",
+    game => {
+      const restartablePhases = new Set([
+        "initializing",
+        "game-master-reveal",
+        "battle-intro",
+        "battle",
+        "champion-victory",
+        "consequence",
+        "challenge-complete",
+        "finale"
+      ]);
+
+      if (
+        game.champion?.registered !== true ||
+        !restartablePhases.has(game.phase)
+      ) return;
+
+      game.round = 1;
+      game.roundComplete = false;
+      game.roundResolution = null;
+      game.score = { player1: 0, player2: 0 };
+      game.player1 ||= {};
+      game.player2 ||= {};
+      game.player1.choice = null;
+      game.player2.choice = null;
+      game.matchWinner = null;
+      game.consequence = { choice: null, locked: false };
+      game.resetVersion = (game.resetVersion || 0) + 1;
+      game.phase = "battle";
+      return game;
+    }
+  );
+
+  if (committed) resetRpsMatchButton.textContent = "RPS MATCH RESET ✓";
+});
+
+fullResetButton.addEventListener("click", async () => {
+  const confirmed = window.confirm(
+    "Reset the entire wedding game?\n\n" +
+    "This will return the experience to the beginning and clear " +
+    "the Champion, scores, and current game progress."
+  );
+
+  if (!confirmed) return;
+
+  const committed = await runAdminCue(
+    fullResetButton,
+    "RESET FULL GAME",
+    game => {
+      game.round = 1;
+      game.roundComplete = false;
+      game.roundResolution = null;
+      game.score = { player1: 0, player2: 0 };
+      game.player1 ||= {};
+      game.player2 ||= {};
+      game.player1.choice = null;
+      game.player2.choice = null;
+      game.champion = { name: null, table: null, registered: false };
+      game.systemOverrideReady = false;
+      game.gameMasterRevealReady = false;
+      game.matchWinner = null;
+      game.consequence = { choice: null, locked: false };
+      game.resetVersion = (game.resetVersion || 0) + 1;
+      game.phase = "idle";
+      return game;
+    }
+  );
+
+  if (committed) fullResetButton.textContent = "FULL GAME RESET ✓";
 });
 
 function resetController() {
 
   selectedChoice = null;
+  savedBattleChoice = null;
   locked = false;
 
   buttons.forEach(button => {
@@ -545,7 +731,28 @@ function resetController() {
 
   status.className =
     "waiting";
-} 
+}
+
+function restoreBattleChoice() {
+  if (!battleActive || !savedBattleChoice) return false;
+
+  selectedChoice = savedBattleChoice;
+  locked = true;
+  buttons.forEach(button => {
+    button.disabled = true;
+    button.classList.toggle(
+      "selected",
+      button.dataset.choice === selectedChoice
+    );
+  });
+  lockButton.disabled = true;
+  lockButton.textContent = "MOVE LOCKED ✓";
+  selection.textContent = "FINAL MOVE: " + selectedChoice.toUpperCase();
+  status.textContent = "WAITING FOR PLAYER 1...";
+  status.className = "ready";
+  return true;
+}
+
 buttons.forEach(button => {
   button.addEventListener("click", () => {
 
@@ -572,10 +779,17 @@ lockButton.addEventListener("click", async () => {
 
   locked = true;
 
-  await set(
-    ref(db, "game/player2/choice"),
-    selectedChoice
-  );
+  try {
+    await set(
+      ref(db, "game/player2/choice"),
+      selectedChoice
+    );
+  } catch (error) {
+    locked = false;
+    lockButton.disabled = false;
+    console.error("Game Masters move write failed:", error);
+    return;
+  }
 
   buttons.forEach(button => {
     button.disabled = true;
@@ -602,11 +816,6 @@ onValue(ref(db, "game/round"), snapshot => {
   if (currentRound === null) {
 
     currentRound = newRound;
-
-    if (locked) {
-      resetController();
-    }
-
     return;
   }
 
@@ -618,6 +827,26 @@ onValue(ref(db, "game/round"), snapshot => {
 
   }
 
+});
+
+onValue(ref(db, "game/player2/choice"), snapshot => {
+  savedBattleChoice = snapshot.val();
+  restoreBattleChoice();
+});
+
+onValue(ref(db, "game/resetVersion"), snapshot => {
+  const resetVersion = snapshot.val() ?? 0;
+
+  if (currentResetVersion === null) {
+    currentResetVersion = resetVersion;
+    return;
+  }
+
+  if (resetVersion !== currentResetVersion) {
+    currentResetVersion = resetVersion;
+    currentRound = 1;
+    resetController();
+  }
 });
 </script>
 
