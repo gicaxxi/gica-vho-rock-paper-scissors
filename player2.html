@@ -256,9 +256,11 @@ import {
   getDatabase,
   ref,
   set,
+  update,
   onValue,
   onDisconnect,
-  runTransaction
+  runTransaction,
+  increment
 }
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 const firebaseConfig = {
@@ -681,30 +683,43 @@ fullResetButton.addEventListener("click", async () => {
 
   if (!confirmed) return;
 
-  const committed = await runAdminCue(
-    fullResetButton,
-    "RESET FULL GAME",
-    game => {
-      game.round = 1;
-      game.roundComplete = false;
-      game.roundResolution = null;
-      game.score = { player1: 0, player2: 0 };
-      game.player1 ||= {};
-      game.player2 ||= {};
-      game.player1.choice = null;
-      game.player2.choice = null;
-      game.champion = { name: null, table: null, registered: false };
-      game.systemOverrideReady = false;
-      game.gameMasterRevealReady = false;
-      game.matchWinner = null;
-      game.consequence = { choice: null, locked: false };
-      game.resetVersion = (game.resetVersion || 0) + 1;
-      game.phase = "idle";
-      return game;
-    }
-  );
+  if (pendingAdminCues.has("RESET FULL GAME")) return;
 
-  if (committed) fullResetButton.textContent = "FULL GAME RESET ✓";
+  pendingAdminCues.add("RESET FULL GAME");
+  fullResetButton.disabled = true;
+
+  try {
+    await update(ref(db, "game"), {
+      phase: "idle",
+      round: 1,
+      roundComplete: false,
+      roundResolution: null,
+      "score/player1": 0,
+      "score/player2": 0,
+      "player1/choice": null,
+      "player2/choice": null,
+      "champion/name": null,
+      "champion/table": null,
+      "champion/registered": false,
+      systemOverrideReady: false,
+      gameMasterRevealReady: false,
+      matchWinner: null,
+      "consequence/choice": null,
+      "consequence/locked": false,
+      resetVersion: increment(1)
+    });
+
+    fullResetButton.textContent = "FULL GAME RESET ✓";
+  } catch (error) {
+    console.error("Failed Admin phase write (RESET FULL GAME):", error);
+  } finally {
+    pendingAdminCues.delete("RESET FULL GAME");
+    updateAdminControls();
+    updateStartBattleControl();
+    updateChallengeCompleteControl();
+    updateStartFinaleControl();
+    updateRecoveryControls();
+  }
 });
 
 function resetController() {
