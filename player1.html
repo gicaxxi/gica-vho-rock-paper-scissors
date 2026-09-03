@@ -183,6 +183,7 @@ from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getDatabase,
   ref,
+  get,
   set,
   onValue,
   onDisconnect,
@@ -225,6 +226,7 @@ let currentResetVersion = null;
 
 let selectedChoice = null;
 let locked = false;
+let lockPending = false;
 let battleActive = false;
 let consequenceActive = false;
 let savedBattleChoice = null;
@@ -239,6 +241,7 @@ function resetController() {
   selectedChoice = null;
   savedBattleChoice = null;
   locked = false;
+  lockPending = false;
 
   const controlsActive =
     battleActive || consequenceActive;
@@ -285,6 +288,36 @@ function restoreBattleChoice() {
   return true;
 }
 
+function restoreConsequenceChoice(consequenceData) {
+  if (!consequenceActive) return false;
+
+  if (consequenceData?.locked !== true) {
+    if (locked) resetController();
+    return false;
+  }
+
+  selectedChoice = consequenceData.choice || null;
+  locked = true;
+  lockPending = false;
+
+  buttons.forEach(button => {
+    button.disabled = true;
+    button.classList.toggle(
+      "selected",
+      button.dataset.choice === selectedChoice
+    );
+  });
+
+  lockButton.disabled = true;
+  lockButton.textContent = "CHOICE LOCKED ✓";
+  selection.textContent = selectedChoice
+    ? "FATE CHOSEN: " + selectedChoice.toUpperCase()
+    : "FATE CHOSEN";
+  status.textContent = "FATE SEALED";
+  status.className = "ready";
+  return true;
+}
+
 onValue(ref(db, "game/phase"), snapshot => {
 
   const phase = snapshot.val() || "idle";
@@ -298,6 +331,13 @@ onValue(ref(db, "game/phase"), snapshot => {
 
   if (enteringConsequence) {
     resetController();
+    get(ref(db, "game/consequence"))
+      .then(consequenceSnapshot => {
+        restoreConsequenceChoice(consequenceSnapshot.val() || {});
+      })
+      .catch(error => {
+        console.error("Consequence restoration read failed:", error);
+      });
     return;
   }
 
@@ -331,7 +371,7 @@ onValue(ref(db, "game/phase"), snapshot => {
 buttons.forEach(button => {
   button.addEventListener("click", () => {
 
-    if ((!battleActive && !consequenceActive) || locked) return;
+    if ((!battleActive && !consequenceActive) || locked || lockPending) return;
 
     selectedChoice = button.dataset.choice;
 
@@ -354,53 +394,75 @@ lockButton.addEventListener("click", async () => {
   if (
     (!battleActive && !consequenceActive) ||
     !selectedChoice ||
-    locked
+    locked ||
+    lockPending
   ) return;
 
-  locked = true;
+  const choiceToLock = selectedChoice;
+  const lockingConsequence = consequenceActive;
+
+  lockPending = true;
+  lockButton.disabled = true;
 
   try {
-    if (consequenceActive) {
+    if (lockingConsequence) {
+
+      const authoritativePhase =
+        (await get(ref(db, "game/phase"))).val();
+
+      if (authoritativePhase !== "consequence") {
+        throw new Error(
+          "Consequence lock rejected: game phase is not consequence."
+        );
+      }
 
       const consequenceResult = await runTransaction(
-        ref(db, "game"),
-        game => {
-          if (
-            !game ||
-            game.phase !== "consequence" ||
-            game.consequence?.locked === true
-          ) return;
+        ref(db, "game/consequence"),
+        consequence => {
+          const currentConsequence = consequence || {
+            choice: null,
+            locked: false
+          };
 
-          game.consequence = {
-            choice: selectedChoice,
+          if (currentConsequence.locked === true) return;
+
+          return {
+            choice: choiceToLock,
             locked: true
           };
-          return game;
-        }
+        },
+        { applyLocally: false }
       );
 
       if (!consequenceResult.committed) {
-        throw new Error("Consequence was already locked or phase changed.");
+        throw new Error(
+          "Consequence lock transaction aborted: a choice is already locked."
+        );
       }
 
     } else {
 
       await set(
         ref(db, "game/player1/choice"),
-        selectedChoice
+        choiceToLock
       );
     }
   } catch (error) {
     locked = false;
-    lockButton.disabled = false;
+    lockPending = false;
+    lockButton.disabled = !selectedChoice;
     console.error(
-      consequenceActive
+      lockingConsequence
         ? "Consequence write failed:"
         : "Champion move write failed:",
       error
     );
     return;
   }
+
+  locked = true;
+  lockPending = false;
+  selectedChoice = choiceToLock;
 
   buttons.forEach(button => {
     button.disabled = true;
@@ -424,37 +486,7 @@ lockButton.addEventListener("click", async () => {
 
 onValue(ref(db, "game/consequence"), snapshot => {
 
-  if (!consequenceActive) return;
-
-  const consequenceData = snapshot.val() || {};
-
-  if (consequenceData.locked === true) {
-
-    selectedChoice = consequenceData.choice || null;
-    locked = true;
-
-    buttons.forEach(button => {
-      button.disabled = true;
-      button.classList.toggle(
-        "selected",
-        button.dataset.choice === selectedChoice
-      );
-    });
-
-    lockButton.disabled = true;
-    lockButton.textContent = "CHOICE LOCKED ✓";
-
-    selection.textContent = selectedChoice
-      ? "FATE CHOSEN: " + selectedChoice.toUpperCase()
-      : "FATE CHOSEN";
-
-    status.textContent = "FATE SEALED";
-    status.className = "ready";
-
-  } else if (locked) {
-
-    resetController();
-  }
+  restoreConsequenceChoice(snapshot.val() || {});
 });
 
 onValue(ref(db, "game/player1/choice"), snapshot => {
