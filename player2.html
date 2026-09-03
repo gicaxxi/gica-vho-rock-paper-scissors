@@ -325,11 +325,14 @@ async function runAdminCue(button, cueName, mutate) {
   button.disabled = true;
 
   try {
-    await get(ref(db, "game"));
+    const authoritativeSnapshot = await get(ref(db, "game"));
+    const authoritativeGame = authoritativeSnapshot.val();
+
+    if (!authoritativeGame) return false;
 
     const result = await runTransaction(ref(db, "game"), game => {
-      if (!game) return;
-      return mutate(game);
+      const currentGame = game || structuredClone(authoritativeGame);
+      return mutate(currentGame);
     });
     if (result.committed) {
       adminPhase = result.snapshot.val()?.phase || "idle";
@@ -348,15 +351,30 @@ async function runAdminCue(button, cueName, mutate) {
   }
 }
 
-async function runPhaseCue(button, cueName, expectedPhase, nextPhase) {
+async function runPhaseCue(
+  button,
+  cueName,
+  expectedPhase,
+  nextPhase,
+  prerequisite
+) {
   if (pendingAdminCues.has(cueName)) return false;
 
   pendingAdminCues.add(cueName);
   button.disabled = true;
 
   try {
+    if (prerequisite && !(await prerequisite())) return false;
+
+    const phaseRef = ref(db, "game/phase");
+    const authoritativePhase = (await get(phaseRef)).val();
+    const expectedPhases = Array.isArray(expectedPhase)
+      ? expectedPhase
+      : [expectedPhase];
+
     const result = await runTransaction(ref(db, "game/phase"), phase => {
-      if (phase !== expectedPhase) return;
+      const currentPhase = phase ?? authoritativePhase;
+      if (!expectedPhases.includes(currentPhase)) return;
       return nextPhase;
     });
 
@@ -396,15 +414,13 @@ openRegistrationButton.addEventListener("click", async () => {
 });
 
 initializeBattleButton.addEventListener("click", async () => {
-  const committed = await runAdminCue(
+  const committed = await runPhaseCue(
     initializeBattleButton,
     "INITIALIZE FINAL BATTLE",
-    game => {
-      if (game.phase !== "registration" || game.champion?.registered !== true) return;
-      game.systemOverrideReady = false;
-      game.phase = "initializing";
-      return game;
-    }
+    "registration",
+    "initializing",
+    async () =>
+      (await get(ref(db, "game/champion/registered"))).val() === true
   );
   if (committed) initializeBattleButton.textContent = "FINAL BATTLE INITIALIZING ✓";
 });
@@ -561,15 +577,13 @@ onValue(ref(db, "game/systemOverrideReady"), snapshot => {
 });
 
 revealGameMastersButton.addEventListener("click", async () => {
-  const committed = await runAdminCue(
+  const committed = await runPhaseCue(
     revealGameMastersButton,
     "REVEAL GAME MASTERS",
-    game => {
-      if (game.phase !== "initializing" || game.systemOverrideReady !== true) return;
-      game.gameMasterRevealReady = false;
-      game.phase = "game-master-reveal";
-      return game;
-    }
+    "initializing",
+    "game-master-reveal",
+    async () =>
+      (await get(ref(db, "game/systemOverrideReady"))).val() === true
   );
   if (committed) revealGameMastersButton.textContent = "GAME MASTERS REVEALED ✓";
 });
@@ -627,16 +641,16 @@ startBattleButton.addEventListener("click", async () => {
 });
 
 challengeCompleteButton.addEventListener("click", async () => {
-  const committed = await runAdminCue(
+  const committed = await runPhaseCue(
     challengeCompleteButton,
     "CHALLENGE COMPLETE",
-    game => {
-      const championDone = game.phase === "champion-victory";
-      const consequenceDone =
-        game.phase === "consequence" && game.consequence?.locked === true;
-      if (!championDone && !consequenceDone) return;
-      game.phase = "challenge-complete";
-      return game;
+    ["champion-victory", "consequence"],
+    "challenge-complete",
+    async () => {
+      const phase = (await get(ref(db, "game/phase"))).val();
+      if (phase === "champion-victory") return true;
+      if (phase !== "consequence") return false;
+      return (await get(ref(db, "game/consequence/locked"))).val() === true;
     }
   );
   if (committed) challengeCompleteButton.textContent = "CHALLENGE COMPLETE ✓";
