@@ -228,13 +228,10 @@ button:hover {
   width: min(760px, 92%);
   min-height: 390px;
   padding: 56px 36px;
-  border: 2px solid #c39a4b;
-  background: #fffdf8;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 10px 10px 0 rgba(20, 33, 58, .08);
 }
 
 .standby-brand {
@@ -252,20 +249,15 @@ button:hover {
   letter-spacing: 4px;
 }
 
-.standby-mode {
-  margin-top: 18px;
-  color: #b58a39;
-  font-size: clamp(17px, 2.2vw, 23px);
-  font-weight: bold;
-  letter-spacing: 5px;
-}
-
 .standby-ready {
   margin-top: 34px;
   color: #7a2038;
   font-size: 20px;
   font-weight: bold;
   letter-spacing: 4px;
+}
+
+.standby-ready.is-connected {
   animation: standbyPulse 2.4s ease-in-out infinite;
 }
 
@@ -282,7 +274,7 @@ button:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .standby-ready {
+  .standby-ready.is-connected {
     animation: none;
   }
 }
@@ -1066,9 +1058,8 @@ button:hover {
   <div class="standby-panel">
     <div class="standby-brand">GICA & VHO</div>
     <h1 class="standby-title">THE WEDDING GAME</h1>
-    <div class="standby-mode">SYSTEM STANDBY</div>
-    <div class="standby-ready">● READY</div>
-    <div class="standby-copy">Awaiting start command...</div>
+    <div id="standbyStatus" class="standby-ready">SYSTEM STANDBY</div>
+    <div id="standbyCopy" class="standby-copy">Waiting for control connection...</div>
   </div>
 
 </div>
@@ -2172,6 +2163,22 @@ if (player2Connected) {
   ).textContent =
     "WAITING TO JOIN";
 
+}
+
+const standbyStatus =
+  document.getElementById("standbyStatus");
+
+const standbyCopy =
+  document.getElementById("standbyCopy");
+
+if (player2Connected) {
+  standbyStatus.textContent = "PRESS START";
+  standbyStatus.className = "standby-ready is-connected";
+  standbyCopy.textContent = "Awaiting start command...";
+} else {
+  standbyStatus.textContent = "SYSTEM STANDBY";
+  standbyStatus.className = "standby-ready";
+  standbyCopy.textContent = "Waiting for control connection...";
 }
 
 if (player1Connected && player2Connected) {
