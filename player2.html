@@ -257,6 +257,7 @@ import {
   ref,
   set,
   update,
+  get,
   onValue,
   onDisconnect,
   runTransaction,
@@ -324,6 +325,8 @@ async function runAdminCue(button, cueName, mutate) {
   button.disabled = true;
 
   try {
+    await get(ref(db, "game"));
+
     const result = await runTransaction(ref(db, "game"), game => {
       if (!game) return;
       return mutate(game);
@@ -345,28 +348,49 @@ async function runAdminCue(button, cueName, mutate) {
   }
 }
 
+async function runPhaseCue(button, cueName, expectedPhase, nextPhase) {
+  if (pendingAdminCues.has(cueName)) return false;
+
+  pendingAdminCues.add(cueName);
+  button.disabled = true;
+
+  try {
+    const result = await runTransaction(ref(db, "game/phase"), phase => {
+      if (phase !== expectedPhase) return;
+      return nextPhase;
+    });
+
+    if (result.committed) adminPhase = result.snapshot.val() || "idle";
+    return result.committed;
+  } catch (error) {
+    console.error("Failed Admin phase write (" + cueName + "):", error);
+    return false;
+  } finally {
+    pendingAdminCues.delete(cueName);
+    updateAdminControls();
+    updateStartBattleControl();
+    updateChallengeCompleteControl();
+    updateStartFinaleControl();
+    updateRecoveryControls();
+  }
+}
+
 startIntroButton.addEventListener("click", async () => {
-  const committed = await runAdminCue(
+  const committed = await runPhaseCue(
     startIntroButton,
     "START FINAL BOSS INTRO",
-    game => {
-      if ((game.phase || "idle") !== "idle") return;
-      game.phase = "intro";
-      return game;
-    }
+    "idle",
+    "intro"
   );
   if (committed) startIntroButton.textContent = "INTRO STARTED ✓";
 });
 
 openRegistrationButton.addEventListener("click", async () => {
-  const committed = await runAdminCue(
+  const committed = await runPhaseCue(
     openRegistrationButton,
     "OPEN CHAMPION REGISTRATION",
-    game => {
-      if (game.phase !== "intro") return;
-      game.phase = "registration";
-      return game;
-    }
+    "intro",
+    "registration"
   );
   if (committed) openRegistrationButton.textContent = "REGISTRATION OPEN ✓";
 });
@@ -481,6 +505,11 @@ onValue(ref(db, "game/phase"), snapshot => {
   updateChallengeCompleteControl();
   updateStartFinaleControl();
   updateRecoveryControls();
+
+  if (adminPhase === "idle") {
+    startIntroButton.textContent = "START FINAL BOSS INTRO";
+    openRegistrationButton.textContent = "OPEN CHAMPION REGISTRATION";
+  }
 
   if (battleActive && restoreBattleChoice()) return;
 
@@ -614,14 +643,11 @@ challengeCompleteButton.addEventListener("click", async () => {
 });
 
 startFinaleButton.addEventListener("click", async () => {
-  const committed = await runAdminCue(
+  const committed = await runPhaseCue(
     startFinaleButton,
     "START FINALE",
-    game => {
-      if (game.phase !== "challenge-complete") return;
-      game.phase = "finale";
-      return game;
-    }
+    "challenge-complete",
+    "finale"
   );
   if (committed) startFinaleButton.textContent = "FINALE STARTED ✓";
 });
