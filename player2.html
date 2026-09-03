@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <title>Player 2 | Gica & Vho</title>
 
@@ -15,11 +15,16 @@ body {
   background: #f7f1e5;
   color: #14213a;
   font-family: Arial, sans-serif;
-  padding: 20px;
+  padding:
+    max(14px, env(safe-area-inset-top))
+    max(14px, env(safe-area-inset-right))
+    max(18px, env(safe-area-inset-bottom))
+    max(14px, env(safe-area-inset-left));
 }
 
 .controller {
-  max-width: 500px;
+  width: 100%;
+  max-width: 520px;
   margin: auto;
   text-align: center;
 }
@@ -28,31 +33,52 @@ body {
   color: #7a2038;
   font-weight: bold;
   letter-spacing: 4px;
-  margin-top: 20px;
+  margin-top: 4px;
+  font-size: 14px;
 }
 
 h1 {
-  margin: 12px 0 5px;
-  font-size: 34px;
+  margin: 8px 0 3px;
+  font-size: clamp(25px, 7.5vw, 34px);
 }
 
 .player {
   color: #b58a39;
   font-weight: bold;
   letter-spacing: 3px;
-  margin-bottom: 35px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.control-section {
+  margin-bottom: 18px;
+  padding: 14px;
+  border: 1px solid rgba(195, 154, 75, .65);
+  background: rgba(255, 253, 248, .7);
+  border-radius: 10px;
+}
+
+.section-title {
+  margin: 0 0 11px;
+  color: #7a2038;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 2px;
 }
 
 .admin-button {
   width: 100%;
-  margin-bottom: 14px;
-  padding: 18px;
+  min-height: 58px;
+  margin-bottom: 10px;
+  padding: 12px 14px;
   border: 2px solid #c39a4b;
   background: #7a2038;
   color: white;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: bold;
   cursor: pointer;
+  border-radius: 7px;
+  touch-action: manipulation;
 }
 
 .admin-button:hover {
@@ -65,7 +91,7 @@ h1 {
 }
 
 #startFinaleButton {
-  margin-bottom: 30px;
+  margin-bottom: 0;
 }
 
 #resetRpsMatchButton {
@@ -76,29 +102,31 @@ h1 {
   border-color: #7a2038;
   background: #fffdf8;
   color: #7a2038;
-  margin-bottom: 30px;
+  margin-bottom: 0;
 }
 
 .instruction {
-  font-size: 19px;
+  font-size: 15px;
   font-weight: bold;
-  margin-bottom: 25px;
+  margin-bottom: 10px;
 }
 
 .choice {
   width: 100%;
-  height: 125px;
-  margin-bottom: 15px;
+  min-height: 64px;
+  margin-bottom: 10px;
   border: 2px solid #c39a4b;
   background: #fffdf8;
   color: #14213a;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: bold;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 25px;
+  gap: 16px;
+  border-radius: 8px;
+  touch-action: manipulation;
 }
 
 .choice.selected {
@@ -108,29 +136,34 @@ h1 {
 
 .choice:disabled {
   cursor: not-allowed;
-  opacity: .65;
+  opacity: .52;
 }
 
 .emoji {
-  font-size: 55px;
+  font-size: 34px;
 }
 
 #selection {
-  margin-top: 25px;
+  min-height: 24px;
+  margin-top: 12px;
   font-weight: bold;
   color: #7a2038;
+  font-size: 14px;
 }
 
 #lockButton {
   width: 100%;
-  margin-top: 18px;
-  padding: 18px;
+  min-height: 60px;
+  margin-top: 10px;
+  padding: 14px 18px;
   border: none;
   background: #14213a;
   color: white;
   font-size: 18px;
   font-weight: bold;
   cursor: pointer;
+  border-radius: 8px;
+  touch-action: manipulation;
 }
 
 #lockButton:disabled {
@@ -139,11 +172,16 @@ h1 {
 }
 
 #status {
-  margin-top: 25px;
-  padding: 18px;
+  margin: 0 0 12px;
+  padding: 11px 12px;
   border: 1px solid #c39a4b;
   font-weight: bold;
-  min-height: 55px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 14px;
 }
 
 .waiting {
@@ -156,10 +194,21 @@ h1 {
 }
 
 .footer {
-  margin-top: 35px;
+  margin-top: 18px;
   color: #9b7a39;
   font-size: 12px;
   letter-spacing: 2px;
+}
+
+.recovery-section {
+  border-color: rgba(122, 32, 56, .45);
+  background: rgba(122, 32, 56, .04);
+}
+
+@media (min-width: 600px) {
+  body { padding-top: 24px; }
+  .control-section { padding: 18px; }
+  .choice { min-height: 72px; }
 }
 </style>
 </head>
@@ -170,10 +219,12 @@ h1 {
 
   <div class="brand">GICA & VHO</div>
 
-  <h1>MAKE YOUR MOVE</h1>
+  <h1>GAME MASTER CONTROL</h1>
 
-  <div class="player">PLAYER 2</div>
+  <div class="player">GICA & VHO</div>
 
+  <section class="control-section" aria-labelledby="adminControlsTitle">
+  <h2 id="adminControlsTitle" class="section-title">GAME CONTROL · ADMIN CUES</h2>
   <button id="startIntroButton" class="admin-button">
     START FINAL BOSS INTRO
   </button>
@@ -201,14 +252,14 @@ h1 {
   <button id="startFinaleButton" class="admin-button" disabled>
     START FINALE
   </button>
+  </section>
 
-  <button id="resetRpsMatchButton" class="admin-button" disabled>
-    RESET RPS MATCH
-  </button>
+  <section class="control-section" aria-labelledby="rpsControlsTitle">
+  <h2 id="rpsControlsTitle" class="section-title">FINAL BOSS RPS CONTROLS</h2>
 
-  <button id="fullResetButton" class="admin-button" disabled>
-    RESET FULL GAME
-  </button>
+  <div id="status" class="waiting">
+    WAITING FOR FINAL BATTLE
+  </div>
 
   <div class="instruction">
     Choose your move, then lock it in.
@@ -236,10 +287,19 @@ h1 {
   <button id="lockButton" disabled>
     LOCK MY MOVE
   </button>
+  </section>
 
-  <div id="status" class="waiting">
-    WAITING FOR FINAL BATTLE
-  </div>
+  <section class="control-section recovery-section" aria-labelledby="recoveryControlsTitle">
+  <h2 id="recoveryControlsTitle" class="section-title">GAME RECOVERY</h2>
+
+  <button id="resetRpsMatchButton" class="admin-button" disabled>
+    RESET RPS MATCH
+  </button>
+
+  <button id="fullResetButton" class="admin-button" disabled>
+    RESET FULL GAME
+  </button>
+  </section>
 
   <div class="footer">
     THE WEDDING GAME • GICA & VHO
