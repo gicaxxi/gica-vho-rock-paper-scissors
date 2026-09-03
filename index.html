@@ -679,62 +679,28 @@ button:hover {
 .avatar-pair {
   display: flex;
   justify-content: center;
-  gap: clamp(34px, 9vw, 100px);
+  gap: clamp(28px, 6vw, 80px);
   margin-top: 28px;
 }
 
 .pixel-character-card {
-  width: 150px;
-  min-height: 190px;
-  padding: 22px 18px 16px;
+  width: clamp(180px, 22vw, 300px);
+  padding: 0;
   border: 0;
   background: transparent;
 }
 
 .pixel-avatar {
-  position: relative;
-  width: 92px;
-  height: 118px;
-  margin: 0 auto;
-  image-rendering: pixelated;
-  filter: brightness(0) saturate(0);
-  opacity: .82;
-  transition: filter .45s steps(4, end), opacity .45s;
-}
-
-.pixel-avatar::before {
-  content: "";
-  position: absolute;
-  top: 10px;
-  left: 26px;
-  width: 40px;
-  height: 42px;
-  background: #d8a078;
-  border: 8px solid #14213a;
-  box-shadow: -8px 8px 0 #14213a, 8px 8px 0 #14213a;
-}
-
-.pixel-avatar::after {
-  content: "";
-  position: absolute;
-  left: 18px;
-  bottom: 4px;
-  width: 56px;
-  height: 56px;
-  background: #7a2038;
-  border: 8px solid #14213a;
-  box-shadow: -14px 18px 0 #7a2038, 14px 18px 0 #7a2038;
-}
-
-.pixel-avatar.groom::before {
-  border-top-width: 12px;
-  box-shadow: -8px 5px 0 #14213a, 8px 5px 0 #14213a;
-}
-
-.pixel-avatar.groom::after {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center;
+  border: 2px solid #c39a4b;
   background: #14213a;
-  box-shadow: -14px 18px 0 #14213a, 14px 18px 0 #14213a,
-              0 14px 0 #e5bd68;
+  filter: brightness(0) saturate(0) blur(8px);
+  opacity: .14;
+  transition: filter .55s ease, opacity .55s ease;
 }
 
 .pixel-avatar.revealed {
@@ -789,9 +755,7 @@ button:hover {
   }
 
   .pixel-character-card {
-    width: 125px;
-    padding-left: 10px;
-    padding-right: 10px;
+    width: min(40vw, 190px);
   }
 }
 
@@ -1252,12 +1216,18 @@ button:hover {
 
     <div class="avatar-pair">
       <div class="pixel-character-card">
-        <div id="gicaAvatar" class="pixel-avatar bride"></div>
+        <img id="gicaAvatar"
+             class="pixel-avatar bride"
+             src="assets/gica-healer.jpg"
+             alt="Gica">
         <div id="gicaName" class="pixel-name">GICA</div>
       </div>
 
       <div class="pixel-character-card">
-        <div id="vhoAvatar" class="pixel-avatar groom"></div>
+        <img id="vhoAvatar"
+             class="pixel-avatar groom"
+             src="assets/vho-tank.jpg"
+             alt="Vho">
         <div id="vhoName" class="pixel-name">VHO</div>
       </div>
     </div>
