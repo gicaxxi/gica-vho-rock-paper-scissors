@@ -2070,3 +2070,1364 @@ async function handleCompletedRound(data) {
   document.getElementById("player2Status").textContent =
     resolution.player2Choice?.toUpperCase() || "LOCKED";
 
+  const championName =
+    data.champion?.name?.trim().toUpperCase() || "CHAMPION";
+
+  document.getElementById("message").textContent =
+    resolution.result === "player1"
+      ? "ROUND " + round + " WINNER\n" + championName
+      : resolution.result === "player2"
+        ? "ROUND " + round + " WINNER\nTHE GAME MASTERS"
+        : "ROUND " + round + "\nDRAW";
+
+  try {
+    if (score1 >= 2 || score2 >= 2) {
+      document.getElementById("winnerScreen").style.display = "none";
+      await sleep(TIMING.round.finalResult);
+
+      await runTransaction(gameRef, game => {
+        if (
+          !game ||
+          game.phase !== "battle" ||
+          game.roundComplete !== true ||
+          game.roundResolution?.round !== round ||
+          game.matchWinner
+        ) return;
+
+        if ((game.score?.player1 || 0) >= 2) {
+          game.matchWinner = "champion";
+          game.phase = "champion-victory";
+        } else if ((game.score?.player2 || 0) >= 2) {
+          game.matchWinner = "game-masters";
+          game.consequence = { choice: null, locked: false };
+          game.phase = "consequence";
+        } else {
+          return;
+        }
+
+        return game;
+      });
+    } else {
+      await sleep(TIMING.round.result);
+      await startNextRound(round);
+    }
+  } catch (error) {
+    console.error("Completed-round transition failed:", error);
+  } finally {
+    completedRoundHandling = false;
+  }
+}
+
+
+/* ---------------------------
+   FIREBASE LISTENER
+---------------------------- */
+
+onValue(
+  gameRef,
+  snapshot => {
+
+  const data =
+    snapshot.val() || {};
+
+  const player1Connected =
+  data.player1?.connected === true;
+
+const player2Connected =
+  data.player2?.connected === true;
+
+const phase =
+  data.phase || "idle";
+
+currentPhase = phase;
+
+if (phase === "idle") {
+
+  const standbyStatus =
+    document.getElementById("standbyStatus");
+
+  const standbyCopy =
+    document.getElementById("standbyCopy");
+
+  if (player2Connected) {
+    standbyStatus.textContent = "PRESS START";
+    standbyStatus.className = "standby-ready is-connected";
+    standbyCopy.textContent = "Awaiting start command...";
+  } else {
+    standbyStatus.textContent = "SYSTEM STANDBY";
+    standbyStatus.className = "standby-ready";
+    standbyCopy.textContent = "Waiting for control connection...";
+  }
+}
+
+const resetVersion = data.resetVersion || 0;
+
+if (currentResetVersion === null) {
+  currentResetVersion = resetVersion;
+} else if (resetVersion !== currentResetVersion) {
+  currentResetVersion = resetVersion;
+  roundRunId++;
+  resolving = false;
+  roundTransitionRunning = false;
+  completedRoundHandling = false;
+}
+
+if (phase !== "finale") {
+  finaleRunId++;
+}
+
+battleControllersConnected =
+  player1Connected && player2Connected;
+
+if (
+  resolving &&
+  (
+    phase !== "battle" ||
+    !battleControllersConnected
+  )
+) {
+  roundRunId++;
+  resolving = false;
+}
+
+const championRegistered =
+  data.champion?.registered === true;
+
+const championName =
+  data.champion?.name || "";
+
+const championTable =
+  data.champion?.table || "";
+
+const championDisplayName =
+  championName.trim().toUpperCase() || "CHAMPION";
+
+document.getElementById(
+  "scoreChampionName"
+).textContent = championDisplayName;
+
+document.getElementById(
+  "battleChampionName"
+).textContent = championDisplayName;
+
+document.getElementById(
+  "battleIntroChampionName"
+).textContent = championDisplayName;
+
+document.getElementById(
+  "victoryChampionName"
+).textContent = championDisplayName;
+
+if (phase !== "consequence") {
+  consequenceIntroPlayed = false;
+  currentConsequenceLocked = false;
+}
+
+if (phase === "idle") {
+  finalePlayed = false;
+}
+
+[
+  "championVictoryScreen",
+  "consequenceScreen",
+  "challengeCompleteScreen",
+  "finaleScreen"
+].forEach(id => {
+  document.getElementById(id).style.display = "none";
+});
+
+
+/* JOIN SCREEN STATUS */
+
+if (player1Connected) {
+
+  document.getElementById(
+    "joinPlayer1Status"
+  ).textContent =
+    "CONNECTED ✓";
+
+} else {
+
+  document.getElementById(
+    "joinPlayer1Status"
+  ).textContent =
+    "WAITING TO JOIN";
+
+}
+
+
+if (player2Connected) {
+
+  document.getElementById(
+    "joinPlayer2Status"
+  ).textContent =
+    "CONNECTED ✓";
+
+} else {
+
+  document.getElementById(
+    "joinPlayer2Status"
+  ).textContent =
+    "WAITING TO JOIN";
+
+}
+
+if (player1Connected && player2Connected) {
+
+  document.getElementById(
+    "joinMessage"
+  ).textContent =
+    "BOTH PLAYERS CONNECTED ✓";
+
+} else if (player1Connected || player2Connected) {
+
+  document.getElementById(
+    "joinMessage"
+  ).textContent =
+    "WAITING FOR THE OTHER SIDE";
+
+} else {
+
+  document.getElementById(
+    "joinMessage"
+  ).textContent =
+    "SCAN YOUR QR CODE TO ENTER THE ARENA";
+}
+
+if (phase === "registration") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "entranceScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleIntroScreen"
+  ).style.display = "none";
+
+  const registrationScreen =
+    document.getElementById("registrationScreen");
+
+  const registrationWaiting =
+    document.getElementById("registrationWaiting");
+
+  const registrationComplete =
+    document.getElementById("registrationComplete");
+
+  registrationScreen.style.display = "flex";
+
+  if (championRegistered) {
+
+    registrationWaiting.style.display = "none";
+    registrationComplete.style.display = "block";
+
+    document.getElementById(
+      "registeredChampionName"
+    ).textContent = championName.toUpperCase();
+
+    document.getElementById(
+      "registeredChampionTable"
+    ).textContent = "TABLE " + championTable;
+
+  } else {
+
+    registrationWaiting.style.display = "block";
+    registrationComplete.style.display = "none";
+  }
+
+} else if (phase === "intro") {
+
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  if (!entrancePlayed) {
+
+    entrancePlayed = true;
+
+    setTimeout(async () => {
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleIntroScreen"
+  ).style.display = "none";
+
+  const entranceScreen =
+    document.getElementById("entranceScreen");
+
+  const introPanel =
+    document.getElementById("introPanel");
+
+  const introIcon =
+    document.getElementById("introIcon");
+
+  const introTitle =
+    document.getElementById("introTitle");
+
+  const introHeading =
+    document.getElementById("introHeading");
+
+  const introCopy =
+    document.getElementById("introCopy");
+
+  const introSuspense =
+    document.getElementById("introSuspense");
+
+  function showIntroScene({
+    icon = "",
+    title = "",
+    heading = "",
+    copy = "",
+    suspense = "",
+    style = ""
+  }) {
+
+    introPanel.className =
+      "intro-panel" + (style ? " " + style : "");
+
+    introIcon.hidden = !icon;
+    introIcon.textContent = icon;
+    introTitle.textContent = title;
+    introHeading.textContent = heading;
+    introCopy.textContent = copy;
+    introSuspense.textContent = suspense;
+  }
+
+  async function playIntroGlitch() {
+
+    try {
+
+      await new Promise(resolve => {
+
+        let finished = false;
+
+        const finish = () => {
+
+          if (finished) return;
+
+          finished = true;
+          introPanel.classList.remove("intro-glitch");
+          resolve();
+        };
+
+        introPanel.addEventListener(
+          "animationend",
+          finish,
+          { once: true }
+        );
+
+        introPanel.classList.add("intro-glitch");
+
+        setTimeout(finish, 550);
+      });
+
+    } catch (error) {
+
+      introPanel.classList.remove("intro-glitch");
+      await sleep(400);
+    }
+  }
+
+  entranceScreen.style.display = "flex";
+
+  showIntroScene({
+    title: "🏆 CHAMPION FOUND",
+    heading: "CONGRATULATIONS!",
+    copy: "You survived the Battle of the Champions."
+  });
+
+  await sleep(TIMING.intro.championFound);
+  await playIntroGlitch();
+
+  showIntroScene({
+    title: "⚠️ WAIT…",
+    heading: "THE GAME IS NOT OVER.",
+    style: "interrupt"
+  });
+
+  await sleep(TIMING.intro.interruption);
+  await playIntroGlitch();
+
+  showIntroScene({
+    title: "FINAL CHALLENGE DETECTED",
+    copy: "Loading opponent…",
+    suspense: "???"
+  });
+
+  await sleep(TIMING.intro.challengeDetected);
+  await playIntroGlitch();
+
+  showIntroScene({
+    icon: "👑",
+    title: "FINAL BOSS UNLOCKED",
+    heading: "THE COUPLE",
+    copy: "FINAL PLAYER vs. THE COUPLE",
+    style: "reveal"
+  });
+
+}, TIMING.intro.startDelay);
+    
+}
+  
+} else if (phase === "initializing") {
+
+  entrancePlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "entranceScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleIntroScreen"
+  ).style.display = "none";
+
+  const initializingScreen =
+    document.getElementById("initializingScreen");
+
+  initializingScreen.style.display = "flex";
+
+  if (!initializationPlayed) {
+
+    initializationPlayed = true;
+
+    setTimeout(async () => {
+
+      if (currentPhase !== "initializing") return;
+
+      await set(
+        ref(db, "game/systemOverrideReady"),
+        false
+      );
+
+      if (currentPhase !== "initializing") return;
+
+      const initializingPanel =
+        document.getElementById("initializingPanel");
+
+      const initializingTitle =
+        document.getElementById("initializingTitle");
+
+      const initializingProgress =
+        document.getElementById("initializingProgress");
+
+      const initializingProgressFill =
+        document.getElementById("initializingProgressFill");
+
+      const initializingPercent =
+        document.getElementById("initializingPercent");
+
+      const overrideHeading =
+        document.getElementById("overrideHeading");
+
+      const overrideAccess =
+        document.getElementById("overrideAccess");
+
+      const overrideVerification =
+        document.getElementById("overrideVerification");
+
+      initializingPanel.className = "initializing-panel";
+      initializingTitle.textContent = "INITIALIZING FINAL BATTLE...";
+      initializingProgress.style.display = "block";
+      initializingProgressFill.style.width = "0%";
+      initializingPercent.style.display = "block";
+      initializingPercent.textContent = "0%";
+      overrideHeading.textContent = "";
+      overrideAccess.textContent = "";
+      overrideVerification.textContent = "";
+
+      const progressSteps = [
+        { value: 25, delay: TIMING.initialization.progressSteps[0] },
+        { value: 47, delay: TIMING.initialization.progressSteps[1] },
+        { value: 68, delay: TIMING.initialization.progressSteps[2] },
+        { value: 82, delay: TIMING.initialization.progressSteps[3] },
+        { value: 90, delay: TIMING.initialization.progressSteps[4] }
+      ];
+
+      for (const step of progressSteps) {
+
+        await sleep(step.delay);
+
+        if (currentPhase !== "initializing") return;
+
+        initializingProgressFill.style.width = step.value + "%";
+        initializingPercent.textContent = step.value + "%";
+      }
+
+      await sleep(TIMING.initialization.overrideHesitation);
+
+      if (currentPhase !== "initializing") return;
+
+      try {
+
+        await new Promise(resolve => {
+
+          let finished = false;
+
+          const finish = () => {
+
+            if (finished) return;
+
+            finished = true;
+            initializingPanel.classList.remove("initializing-glitch");
+            resolve();
+          };
+
+          initializingPanel.addEventListener(
+            "animationend",
+            finish,
+            { once: true }
+          );
+
+          initializingPanel.classList.add("initializing-glitch");
+          setTimeout(finish, 550);
+        });
+
+      } catch (error) {
+
+        initializingPanel.classList.remove("initializing-glitch");
+        await sleep(400);
+      }
+
+      if (currentPhase !== "initializing") return;
+
+      initializingPanel.className = "initializing-panel override";
+      initializingTitle.textContent = "⚠️ SYSTEM OVERRIDE";
+      initializingProgress.style.display = "none";
+      initializingPercent.style.display = "none";
+      overrideHeading.textContent = "ADMINISTRATOR ACCESS DETECTED";
+      overrideAccess.textContent = "ACCESS LEVEL: ███████";
+      overrideVerification.textContent = "IDENTITY VERIFICATION REQUIRED";
+
+      await set(
+        ref(db, "game/systemOverrideReady"),
+        true
+      );
+
+    }, TIMING.initialization.startDelay);
+  }
+
+} else if (phase === "game-master-reveal") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  battleIntroPlayed = false;
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "entranceScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleIntroScreen"
+  ).style.display = "none";
+
+  const gameMasterRevealScreen =
+    document.getElementById("gameMasterRevealScreen");
+
+  gameMasterRevealScreen.style.display = "flex";
+
+  if (!gameMasterRevealPlayed) {
+
+    gameMasterRevealPlayed = true;
+
+    setTimeout(async () => {
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      await set(
+        ref(db, "game/gameMasterRevealReady"),
+        false
+      );
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      const gameMasterPanel =
+        document.getElementById("gameMasterPanel");
+
+      const gameMasterKicker =
+        document.getElementById("gameMasterKicker");
+
+      const gameMasterTitle =
+        document.getElementById("gameMasterTitle");
+
+      const gameMasterCountdown =
+        document.getElementById("gameMasterCountdown");
+
+      const gicaAvatar =
+        document.getElementById("gicaAvatar");
+
+      const vhoAvatar =
+        document.getElementById("vhoAvatar");
+
+      const gicaName =
+        document.getElementById("gicaName");
+
+      const vhoName =
+        document.getElementById("vhoName");
+
+      const gameMasterSupport =
+        document.getElementById("gameMasterSupport");
+
+      const gameMasterConfirmation =
+        document.getElementById("gameMasterConfirmation");
+
+      gameMasterPanel.className = "game-master-panel";
+      gameMasterKicker.textContent = "SYSTEM OVERRIDE";
+      gameMasterTitle.textContent = "IDENTITY VERIFICATION IN PROGRESS...";
+      gameMasterCountdown.textContent = "";
+      gicaAvatar.className = "pixel-avatar bride";
+      vhoAvatar.className = "pixel-avatar groom";
+      gicaName.className = "pixel-name";
+      vhoName.className = "pixel-name";
+      gameMasterSupport.textContent = "";
+      gameMasterConfirmation.textContent = "";
+
+      await sleep(TIMING.gameMastersReveal.verification);
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      gameMasterTitle.textContent = "IDENTIFYING ADMINISTRATORS...";
+
+      await sleep(TIMING.gameMastersReveal.identifying);
+
+      for (const number of [3, 2, 1]) {
+
+        if (currentPhase !== "game-master-reveal") return;
+
+        gameMasterCountdown.textContent = number;
+        await sleep(TIMING.gameMastersReveal.countdownStep);
+      }
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      try {
+
+        await new Promise(resolve => {
+
+          let finished = false;
+
+          const finish = () => {
+
+            if (finished) return;
+
+            finished = true;
+            gameMasterPanel.classList.remove("game-master-glitch");
+            resolve();
+          };
+
+          gameMasterPanel.addEventListener(
+            "animationend",
+            finish,
+            { once: true }
+          );
+
+          gameMasterPanel.classList.add("game-master-glitch");
+          setTimeout(finish, 550);
+        });
+
+      } catch (error) {
+
+        gameMasterPanel.classList.remove("game-master-glitch");
+        await sleep(400);
+      }
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      gameMasterCountdown.textContent = "";
+      gicaAvatar.classList.add("revealed");
+      vhoAvatar.classList.add("revealed");
+      gicaName.classList.add("revealed");
+      vhoName.classList.add("revealed");
+
+      await sleep(TIMING.gameMastersReveal.identitiesRevealed);
+
+      if (currentPhase !== "game-master-reveal") return;
+
+      gameMasterPanel.className = "game-master-panel revealed";
+      gameMasterKicker.textContent = "ACCESS GRANTED ✓";
+      gameMasterTitle.textContent = "🎮 THE GAME MASTERS";
+      gameMasterSupport.textContent = "GICA & VHO";
+      gameMasterConfirmation.textContent = "ADMINISTRATORS IDENTIFIED";
+
+      await set(
+        ref(db, "game/gameMasterRevealReady"),
+        true
+      );
+
+    }, TIMING.gameMastersReveal.startDelay);
+  }
+
+} else if (phase === "battle-intro") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "entranceScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
+  ).style.display = "none";
+
+  const battleIntroScreen =
+    document.getElementById("battleIntroScreen");
+
+  battleIntroScreen.style.display = "flex";
+
+  if (!battleIntroPlayed) {
+
+    battleIntroPlayed = true;
+
+    setTimeout(async () => {
+
+      if (currentPhase !== "battle-intro") return;
+
+      const battleIntroCue =
+        document.getElementById("battleIntroCue");
+
+      battleIntroCue.className = "battle-intro-cue";
+      battleIntroCue.textContent = "";
+
+      await sleep(TIMING.battleIntro.matchup);
+
+      if (currentPhase !== "battle-intro") return;
+
+      battleIntroCue.textContent = "READY?";
+
+      await sleep(TIMING.battleIntro.ready);
+
+      if (currentPhase !== "battle-intro") return;
+
+      battleIntroCue.className = "battle-intro-cue start";
+      battleIntroCue.textContent = "BATTLE START!";
+
+      await sleep(TIMING.battleIntro.battleStart);
+
+      if (currentPhase !== "battle-intro") return;
+
+      await set(
+        ref(db, "game/phase"),
+        "battle"
+      );
+
+    }, TIMING.battleIntro.startDelay);
+  }
+
+} else if (phase === "battle") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  document.getElementById(
+    "joinScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "entranceScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleIntroScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleScreen"
+  ).style.display = "block";
+
+} else if (phase === "champion-victory") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  showDedicatedScreen("championVictoryScreen");
+
+} else if (phase === "consequence") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  showDedicatedScreen("consequenceScreen");
+
+  currentConsequenceLocked =
+    data.consequence?.locked === true;
+
+  const consequenceChoice =
+    data.consequence?.choice || "";
+
+  if (currentConsequenceLocked && consequenceChoice) {
+
+    showConsequenceReveal(consequenceChoice);
+
+  } else if (!consequenceIntroPlayed) {
+
+    consequenceIntroPlayed = true;
+
+    setTimeout(async () => {
+
+      if (
+        currentPhase !== "consequence" ||
+        currentConsequenceLocked
+      ) return;
+
+      document.getElementById(
+        "consequenceSymbol"
+      ).textContent = "";
+
+      document.getElementById(
+        "consequenceTitle"
+      ).textContent = "🎮 GAME MASTERS WIN";
+
+      document.getElementById(
+        "consequenceCopy"
+      ).textContent = "GAME OVER?\n\n...NOT QUITE.";
+
+      document.getElementById(
+        "consequenceOrder"
+      ).textContent = "";
+
+      await sleep(TIMING.consequence.gameMastersWin);
+
+      if (
+        currentPhase !== "consequence" ||
+        currentConsequenceLocked
+      ) return;
+
+      document.getElementById(
+        "consequenceTitle"
+      ).textContent = "⚠️ ONE FINAL CHALLENGE REMAINS";
+
+      document.getElementById(
+        "consequenceCopy"
+      ).textContent = "CHAMPION...\n\nCHOOSE YOUR FATE.";
+
+    }, TIMING.consequence.startDelay);
+  }
+
+} else if (phase === "challenge-complete") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  showDedicatedScreen("challengeCompleteScreen");
+
+} else if (phase === "finale") {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+
+  showDedicatedScreen("finaleScreen");
+
+  if (!finalePlayed) {
+    finalePlayed = true;
+    playFinale();
+  }
+
+} else {
+
+  entrancePlayed = false;
+  initializationPlayed = false;
+  gameMasterRevealPlayed = false;
+  battleIntroPlayed = false;
+  
+  document.getElementById(
+    "joinScreen"
+  ).style.display =
+    "block";
+
+document.getElementById(
+  "entranceScreen"
+).style.display = "none";
+  
+  document.getElementById(
+    "battleScreen"
+  ).style.display =
+    "none";
+
+  document.getElementById(
+    "registrationScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "initializingScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "gameMasterRevealScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "battleIntroScreen"
+  ).style.display = "none";
+
+}
+
+  document.getElementById(
+    "score1"
+  ).textContent =
+    data.score?.player1 || 0;
+
+
+  document.getElementById(
+    "score2"
+  ).textContent =
+    data.score?.player2 || 0;
+
+
+  document.getElementById(
+    "roundNumber"
+  ).textContent =
+    data.round || 1;
+
+
+  if (!data.roundComplete) {
+
+
+    document.getElementById(
+      "winnerScreen"
+    ).style.display =
+      "none";
+
+
+    document.getElementById(
+      "player1Choice"
+    ).textContent =
+      "?";
+
+
+    document.getElementById(
+      "player2Choice"
+    ).textContent =
+      "?";
+
+
+if (data.player1?.choice) {
+
+  document.getElementById(
+    "player1Status"
+  ).textContent =
+    "READY ✓";
+
+}
+
+else if (data.player1?.connected) {
+
+  document.getElementById(
+    "player1Status"
+  ).textContent =
+    "CONNECTED ✓";
+
+}
+
+else {
+
+  document.getElementById(
+    "player1Status"
+  ).textContent =
+    "WAITING TO JOIN";
+
+}
+
+
+    if (data.player2?.choice) {
+
+  document.getElementById(
+    "player2Status"
+  ).textContent =
+    "READY ✓";
+
+}
+
+else if (data.player2?.connected) {
+
+  document.getElementById(
+    "player2Status"
+  ).textContent =
+    "CONNECTED ✓";
+
+}
+
+else {
+
+  document.getElementById(
+    "player2Status"
+  ).textContent =
+    "WAITING TO JOIN";
+
+}
+
+if (phase === "battle") {
+
+  const championLocked = Boolean(data.player1?.choice);
+  const gameMastersLocked = Boolean(data.player2?.choice);
+
+  if (!player1Connected && !player2Connected) {
+
+    document.getElementById("message").textContent =
+      "WAITING FOR BOTH CONTROLLERS TO RECONNECT";
+
+    document.getElementById("gameStatus").textContent =
+      "Battle paused. Scores and locked moves are preserved.";
+
+  } else if (!player1Connected) {
+
+    document.getElementById("message").textContent =
+      "WAITING FOR CHAMPION TO RECONNECT";
+
+    document.getElementById("gameStatus").textContent =
+      "Battle paused. The current score is preserved.";
+
+  } else if (!player2Connected) {
+
+    document.getElementById("message").textContent =
+      "WAITING FOR GAME MASTERS TO RECONNECT";
+
+    document.getElementById("gameStatus").textContent =
+      "Battle paused. The current score is preserved.";
+
+  } else if (championLocked && gameMastersLocked) {
+
+    document.getElementById("message").textContent =
+      "BOTH MOVES LOCKED ✓";
+
+    document.getElementById("gameStatus").textContent =
+      "Get ready for the reveal.";
+
+    resolveRound(data);
+
+  } else if (championLocked) {
+
+    document.getElementById("message").textContent =
+      championDisplayName + " LOCKED ✓";
+
+    document.getElementById("gameStatus").textContent =
+      "WAITING FOR THE GAME MASTERS";
+
+  } else if (gameMastersLocked) {
+
+    document.getElementById("message").textContent =
+      "THE GAME MASTERS LOCKED ✓";
+
+    document.getElementById("gameStatus").textContent =
+      "WAITING FOR " + championDisplayName;
+
+  } else {
+
+    document.getElementById("message").textContent =
+      "WAITING FOR MOVES";
+
+    document.getElementById("gameStatus").textContent =
+      "Choose your moves and lock them in.";
+  }
+}
+
+  } else if (phase === "battle") {
+    handleCompletedRound(data);
+  }
+
+});
+
+
+/* ---------------------------
+   NEW GAME
+---------------------------- */
+
+document.getElementById(
+  "newGameButton"
+)
+.addEventListener(
+  "click",
+  async () => {
+
+    if (resetInProgress) return;
+    resetInProgress = true;
+    document.getElementById("newGameButton").disabled = true;
+    document.getElementById("resetGameButton").disabled = true;
+
+
+    resolving = false;
+
+    roundTransitionRunning =
+      false;
+
+    entrancePlayed = false;
+
+    try {
+      await update(
+  gameRef,
+  {
+
+    round: 1,
+
+    "player1/choice":
+      null,
+
+    "player2/choice":
+      null,
+
+    "score/player1":
+      0,
+
+    "score/player2":
+      0,
+
+    "champion/name":
+      null,
+
+    "champion/table":
+      null,
+
+    "champion/registered":
+      false,
+
+    systemOverrideReady:
+      false,
+
+    gameMasterRevealReady:
+      false,
+
+    matchWinner:
+      null,
+
+    "consequence/choice":
+      null,
+
+    "consequence/locked":
+      false,
+
+    phase:
+      "idle",
+
+    roundComplete:
+      false,
+
+    roundResolution:
+      null,
+
+    resetVersion:
+      increment(1)
+
+  }
+      );
+    } catch (error) {
+      console.error("New Game reset write failed:", error);
+    } finally {
+      resetInProgress = false;
+      document.getElementById("newGameButton").disabled = false;
+      document.getElementById("resetGameButton").disabled = false;
+    }
+
+  }
+);
+
+document.getElementById(
+  "resetGameButton"
+)
+.addEventListener(
+  "click",
+  async () => {
+
+    if (resetInProgress) return;
+    resetInProgress = true;
+    document.getElementById("newGameButton").disabled = true;
+    document.getElementById("resetGameButton").disabled = true;
+
+    resolving = false;
+    
+    roundTransitionRunning = false;
+    
+    entrancePlayed = false;
+    
+    try {
+      await update(
+      gameRef,
+      {
+        round: 1,
+        "player1/choice": null,
+        "player2/choice": null,
+        "score/player1": 0,
+        "score/player2": 0,
+        "champion/name": null,
+        "champion/table": null,
+        "champion/registered": false,
+        systemOverrideReady: false,
+        gameMasterRevealReady: false,
+        matchWinner: null,
+        "consequence/choice": null,
+        "consequence/locked": false,
+        phase: "idle",
+        roundComplete: false,
+        roundResolution: null,
+        resetVersion: increment(1)
+      }
+      );
+    } catch (error) {
+      console.error("Reset Game write failed:", error);
+      resetInProgress = false;
+      document.getElementById("newGameButton").disabled = false;
+      document.getElementById("resetGameButton").disabled = false;
+      return;
+    }
+
+    resetInProgress = false;
+    document.getElementById("newGameButton").disabled = false;
+    document.getElementById("resetGameButton").disabled = false;
+
+    document.getElementById(
+      "winnerScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+      "message"
+    ).textContent =
+      "WAITING FOR PLAYERS";
+
+    document.getElementById(
+      "player1Choice"
+    ).textContent = "?";
+
+    document.getElementById(
+      "player2Choice"
+    ).textContent = "?";
+
+  }
+);
+
+const registrationUrl =
+  new URL("join.html", window.location.href).href;
+
+const championControllerUrl =
+  new URL("player1.html", window.location.href).href;
+
+const gameMastersControllerUrl =
+  new URL("player2.html", window.location.href).href;
+
+const qrBaseUrl =
+  "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=";
+
+document.getElementById("championJoinQr").src =
+  qrBaseUrl + encodeURIComponent(championControllerUrl);
+
+document.getElementById("gameMastersJoinQr").src =
+  qrBaseUrl + encodeURIComponent(gameMastersControllerUrl);
+
+document.getElementById(
+  "registrationQr"
+).src =
+  "https://api.qrserver.com/v1/create-qr-code/?size=600x600&data="
+  + encodeURIComponent(registrationUrl);
+</script>
+
+</body>
+</html>
