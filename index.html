@@ -1744,6 +1744,8 @@ async function playFinale() {
   if (!finaleCanContinue()) return;
 
   const completedMissions = [
+    "SAVE THE DATE ✓",
+    "WEDDING INVITATION ✓",
     "PLAYER KITS ✓",
     "CHALLENGES ✓",
     "MISSIONS ✓",
@@ -1760,16 +1762,19 @@ async function playFinale() {
   }
 
   if (!finaleCanContinue()) return;
+  copy.textContent = "EVERY QUEST LED US HERE.";
   await sleep(TIMING.finale.checklistComplete);
 
   if (!finaleCanContinue()) return;
   title.textContent = "GAME COMPLETE";
+  copy.textContent = "Every challenge was played.\nEvery mission led us here.";
   checklist.textContent = "";
   await sleep(TIMING.finale.gameComplete);
 
   if (!finaleCanContinue()) return;
   kicker.textContent = "SYSTEM STATUS";
   title.textContent = "GAME MASTER SESSION ENDING...";
+  copy.textContent = "";
   await sleep(TIMING.finale.sessionEnding);
 
   if (!finaleCanContinue()) return;
@@ -1789,13 +1794,13 @@ async function playFinale() {
   panel.classList.remove("finale-shutdown");
   kicker.textContent = "";
   title.textContent = "WE CREATED THE GAME.";
-  copy.textContent = "YOU MADE IT A CELEBRATION.";
+  copy.textContent = "But you brought the laughter.\nYou brought the memories.\nYou made it a celebration.\n\nTHANK YOU FOR PLAYING A PART IN OUR STORY.";
   checklist.textContent = "";
   await sleep(TIMING.finale.emotionalBridge);
 
   if (!finaleCanContinue()) return;
-  title.textContent = "AND NOW...";
-  copy.textContent = "OUR NEXT CHAPTER BEGINS.";
+  title.textContent = "THE GAME MAY BE OVER...";
+  copy.textContent = "BUT OUR GREATEST ADVENTURE\nIS JUST BEGINNING.";
   await sleep(TIMING.finale.nextChapter);
 
   if (!finaleCanContinue()) return;
@@ -1807,7 +1812,7 @@ async function playFinale() {
   if (!finaleCanContinue()) return;
   kicker.textContent = "";
   title.textContent = "BEFORE WE BEGIN OUR NEXT CHAPTER...";
-  copy.textContent = "LET'S LOOK BACK AT THE DAY\nTHAT BROUGHT US HERE.";
+  copy.textContent = "LET’S LOOK BACK AT THE DAY\nTHAT BROUGHT US HERE.";
   checklist.textContent = "";
   memory.textContent = "▶ PLAY MEMORY";
   memory.style.display = "block";
